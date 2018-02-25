@@ -220,29 +220,29 @@ while True:
                     client.sendMessage(op.param1, "Grup apa ini?")
                     client.leaveRoom(op.param1)
 
-            #if op.type == 26:
-                #msg = op.message
-                #text = msg.text
-                #msg_id = msg.id
-                #receiver = msg.to
-                #sender = msg._from
-                #try:
-                    #if msg.text != None:
-                        #if msg.toType == 2:
-                           #may = client.getProfile().mid
-                            #if may in str(msg.contentMetadata) and 'MENTION' in str(msg.contentMetadata):
-                                #pilih = ['Perlu apa?']
-                                #rslt = random.choice(pilih)
-                                #kc.sendText(msg.to, str(rslt))
-                            #else:
-                                #pass
-
-                        #else:
-                            #pass
-                    #else:
-                        #pass
-                #except Exception as e:
-                     #client.log("ERROR cuk")
+            if op.type == 26:
+                msg = op.message
+                text = msg.text
+                msg_id = msg.id
+                receiver = msg.to
+                sender = msg._from
+                try:
+                    if msg.text != None:
+                        if msg.toType == 2:
+                           may = client.getProfile().mid
+                           if may in str(msg.contentMetadata) and 'MENTION' in str(msg.contentMetadata):
+                               pilih = ['Perlu apa?']
+                               rslt = random.choice(pilih)
+                               kc.sendText(msg.to, str(rslt))
+                           elif 'assalamulaikum' in text:
+                               n = client.getProfile(msg._from)
+                               client.sendText(msg.to,"Waalaikumussalam" + n.name)
+                        else:
+                            pass
+                    else:
+                        pass
+                except Exception as e:
+                     client.log("[MASALAH] " + str(e))
             if op.type == 25:
                 msg = op.message
                 text = msg.text
