@@ -230,10 +230,11 @@ while True:
                     if msg.text != None:
                         if msg.toType == 2:
                            may = client.getProfile().mid
+                           nama = client.getContact(op.param2).displayName
                            if may in str(msg.contentMetadata) and 'MENTION' in str(msg.contentMetadata):
-                               pilih = ['Perlu apa?']
+                               pilih = ['Ada keperluan dengan fakhri? ']
                                rslt = random.choice(pilih)
-                               kc.sendText(msg.to, str(rslt))
+                               kc.sendText(msg.to, str(rslt) + str(nama))
                            elif 'assalamulaikum' in text:
                                n = client.getProfile(msg._from)
                                client.sendText(msg.to,"Waalaikumussalam" + n.name)
@@ -895,8 +896,11 @@ while True:
                                 client.sendMessage(msg.to,pesan)
                             elif text.lower() == 'restart':
                                 restart_program()
+                            elif "bilang:" in text.lower():
+                                p= msg.text.replace("bilang:","")
+                                kc.sendText(msg.to, (p))
                 except Exception as e:
-                    client.log("ERROR cuk" + str(e))
+                    client.sendMessage(msg.to,"ERROR : " + str(e))
 #=========================================================================================================================================#
 
 #=========================================================================================================================================#
