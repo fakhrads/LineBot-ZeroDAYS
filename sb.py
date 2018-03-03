@@ -11,13 +11,14 @@ from urllib import parse
 
 botStart = time.time()
 
-#client = LineClient()
 client = LineClient(authToken='Ep2nQdBy3dJj1LPiJjT0.V+uWm8q8TMmc3J2Dq76caa.PcrDp/ze9j533fxdhnGjOp4U0Xb7LkImcb65aAsdrDk=')
-kc = LineClient(authToken='EppgCPiRm7XGTMzGz8n9.RymJZGAAdJ0Wb6vnuPgsMq.8ND47Sq3m6l9PtsiHm9dpahc1C8YVKCd04aGen5CZ2M=') #login token in here
 client.log("Auth Token : " + str(client.authToken))
-
 channel = LineChannel(client)
 client.log("Channel Access Token : " + str(channel.channelAccessToken))
+kc = LineClient(authToken='EppgCPiRm7XGTMzGz8n9.RymJZGAAdJ0Wb6vnuPgsMq.8ND47Sq3m6l9PtsiHm9dpahc1C8YVKCd04aGen5CZ2M=') #login token in here
+kc.log("Auth Token : " + str(client.authToken))
+channel2 = LineChannel(kc)
+kc.log("Channel Access Token : " + str(channel2.channelAccessToken))
 
 clientProfile = client.getProfile()
 clientSettings = client.getSettings()
@@ -43,9 +44,37 @@ backup.pictureStatus = contact.pictureStatus
 
 helpMessage ="""Help menu v0.0.1
 
+openurl
+closeurl
+help
+wifeclone @
+carilagu
+carilirik
+instagraminfo
+instagrampost
+group bc
+clonegc
+saytr:
+say:
+keluar
+masuk
+cloneprofile (self)
+lurking on
+lurking off
+lurking reset
+lurk
+ceksider
+offread
+kalender
+image:
+anime
+groupid
+grouppicture
+groupcreator
+groupticket
 
-
-"""
+Edited By Fakhri forked from satriapasa
+Source: https://github.com/fakhrads/ZeroDAYS"""
 
 poll = LinePoll(client)
 poll2 = LinePoll(kc)
@@ -229,15 +258,11 @@ while True:
                 try:
                     if msg.text != None:
                         if msg.toType == 2:
+                           contact = client.getContact(sender)
                            may = client.getProfile().mid
-                           nama = client.getContact(op.param2).displayName
                            if may in str(msg.contentMetadata) and 'MENTION' in str(msg.contentMetadata):
-                               pilih = ['Ada keperluan dengan fakhri? ']
-                               rslt = random.choice(pilih)
-                               kc.sendText(msg.to, str(rslt) + str(nama))
-                           elif 'assalamulaikum' in text:
-                               n = client.getProfile(msg._from)
-                               client.sendText(msg.to,"Waalaikumussalam" + n.name)
+                              kc.sendText(msg.to, "Jangan tag Fakhri kalo gapenting " + contact.displayName)
+                              kc.tag(receiver, sender)
                         else:
                             pass
                     else:
@@ -546,7 +571,7 @@ while True:
                                 except Exception as e:
                                     client.sendText(receiver, str(e))
                             elif msg.text in ["Key","Help","key","help"]:
-                                client.sendText(msg.to,helpMessage)
+                                kc.sendText(msg.to,helpMessage)
                             elif "yt:" in msg.text.lower():
                                 try:
                                     query = msg.text.replace("yt:", "")
