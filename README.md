@@ -1,1 +1,3 @@
-# Hello_World
+# ZeroDAYS
+
+Repo ini Open Source, bebas mau diapain. 
