@@ -57,7 +57,15 @@ class LineTalk(object):
         yt_href = yt_href.replace("watch?v=", "")
         yt_final = "https://youtu.be" + str(yt_href)
         return yt_final
-    
+      
+    @loggedIn 
+    def sendMessageWithContent(self, to, text, name, url, iconlink):
+        contentMetadata = {
+            'AGENT_NAME': name,
+            'AGENT_LINK': url,
+            'AGENT_ICON': iconlink
+        }
+        return self.sendMessage(to, text, contentMetadata, 0)
     @loggedIn
     def mention(self, to, nama):
         aa = ""
@@ -270,7 +278,15 @@ class LineTalk(object):
     def sendGIFWithURL(self, to, url):
         path = self.downloadFileURL(url, 'path')
         return self.sendGIF(to, path)
-
+    
+    @loggedIn  
+    def like(self, mid, postid, likeType=1001):
+        return self.channel.like(mid, postid, likeType)
+    
+    @loggedIn
+    def comment(self, mid, postid, text):
+        return self.channel.comment(mid, postid, text)
+    
     @loggedIn
     def sendVideo(self, to, path):
         objectId = self.sendMessage(to=to, text=None, contentMetadata={'VIDLEN': '60000','DURATION': '60000'}, contentType = 2).id

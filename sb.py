@@ -2,7 +2,7 @@
 import linepy
 from linepy import *
 from datetime import datetime
-import json, time, random, tempfile, os, sys, pytz, urllib, re, ast, string, six, requests, html5lib
+import json, time, random, tempfile, os, sys, pytz, urllib, re, ast, string, six, requests, html5lib, urllib3, threading
 from humanfriendly import format_timespan, format_size, format_number, format_length
 from bs4 import BeautifulSoup
 from gtts import gTTS
@@ -11,14 +11,11 @@ from urllib import parse
 
 botStart = time.time()
 
-client = LineClient(authToken='Ep2nQdBy3dJj1LPiJjT0.V+uWm8q8TMmc3J2Dq76caa.PcrDp/ze9j533fxdhnGjOp4U0Xb7LkImcb65aAsdrDk=')
+client = LineClient(authToken='Et2VTGQwrBO1NYgvgj87.4jQ8bNKn9QAFKTmHMCnyHW.BrKpVBkhMPed+MG6y9/Kpqn/G1US5XSABqUktywJ4PI=')
 client.log("Auth Token : " + str(client.authToken))
 channel = LineChannel(client)
 client.log("Channel Access Token : " + str(channel.channelAccessToken))
-kc = LineClient(authToken='EppgCPiRm7XGTMzGz8n9.RymJZGAAdJ0Wb6vnuPgsMq.8ND47Sq3m6l9PtsiHm9dpahc1C8YVKCd04aGen5CZ2M=') #login token in here
-kc.log("Auth Token : " + str(client.authToken))
-channel2 = LineChannel(kc)
-kc.log("Channel Access Token : " + str(channel2.channelAccessToken))
+#clients = LineClient(authToken='EsVzA1gFfuU5cS680Yse.qI0GQMY/r9rCXmnoe6YdlG.z+m9QOy5rcxvMtJMYB5do7k4W7w60EKEw/XJ0jwnPu0=')
 
 clientProfile = client.getProfile()
 clientSettings = client.getSettings()
@@ -31,59 +28,61 @@ backup.displayName = contact.displayName
 backup.statusMessage = contact.statusMessage
 backup.pictureStatus = contact.pictureStatus
 
-clientProfile = kc.getProfile()
-clientSettings = kc.getSettings()
-clientPoll = LinePoll(kc)
-clientMID = kc.profile.mid
+msg_dict = {}
 
-contact = kc.getProfile()
-backup = kc.getProfile()
-backup.displayName = contact.displayName
-backup.statusMessage = contact.statusMessage
-backup.pictureStatus = contact.pictureStatus
+helpmedia="""[Command Media]
+☛ !sholat 「nama lokasi」
+☛ !quran 「no surat」|「dari ayat」|「ke ayat」
+☛ !gambar 「nama gambar」
+☛ !iginfo 「username」
+☛ !igpost 「username」|「nomor post」
+☛ !igstory 「username」|「nomor post」
+☛ !ssweb 「link website」
+☛ !cuaca 「lokasi」
+☛ !smusik 「artis - judul musik」
+☛ !slirik 「artis - judul musik」
+☛ !checkdate「tanggal-bulan-tahun」 """
 
-helpMessage ="""Help menu v0.0.1
+helpsider="""[Command Sider]
+☛ !setpoint
+☛ !view
+☛ !delpoint
+☛ !resetpoint
+=======[]========
+☛ !set
+☛ !cek"""
 
-openurl
-closeurl
-help
-wifeclone @
-carilagu
-carilirik
-instagraminfo
-instagrampost
-group bc
-clonegc
-saytr:
-say:
-keluar
-masuk
-cloneprofile (self)
-lurking on
-lurking off
-lurking reset
-lurk
-ceksider
-offread
-kalender
-image:
-anime
-groupid
-grouppicture
-groupcreator
-groupticket
+helpgroup="""[Command Group]
+☛ !openurl
+☛ !closeurl
+☛ !tagall
+☛ !spic 「tag」
+☛ !scover 「tag」"""
 
-Edited By Fakhri forked from satriapasa
-Source: https://github.com/fakhrads/ZeroDAYS"""
+helpMessage ="""[COMMAND LIST]
 
+【1】!media
+【2】!sider
+【3】!group
+【4】!help
+【5】!keluar
+
+versi : 2.0.0
+http://fakhrads.xyz
+"""
+changeLog ="""[ChangeLog]
+
+2.0.0
+「Perbaikan bugs!」
+
+"""
 poll = LinePoll(client)
-poll2 = LinePoll(kc)
 Amid = client.getProfile().mid
-Bmid = kc.getProfile().mid
-KAC = [client,kc]
-admin = [Amid]
-bots = [Amid,Bmid]
-mode='self'
+creator = "ubff53033c43cb66302de3d9d43be8200"
+admin = "u8c49973f3ed4038ede20b7301b2c3a1e"
+
+user = {}
+limit = 1
 
 settings = {
     "restartPoint":{},
@@ -91,7 +90,8 @@ settings = {
     "timeRestart":{},
     "userAgent":{},
     "keyCommand":".",
-    "autoAdd":False,
+    "members":20,
+    "autoAdd":True,
     "autoJoin":True,
     "autoReject":False,
     "autoLeave":False,
@@ -100,6 +100,12 @@ settings = {
     "changePicture":False,
     "changeGroupPicture":False,
     "autoJoinTicket":True,
+    "setKey": False,
+    "keyCommand":"",
+    "clock":True,
+    "cName":"Mika ",
+    "autoRespon": True,
+    "unsendMessage": True,
 }
 
 cctv={
@@ -111,10 +117,12 @@ cctv={
 read = {
     "readPoint":{},
     "readMember":{},
+    "setTime":{},
     "readTime":{},
     "ROM":{},
 }
-
+setTime = {}
+setTime = read['setTime']
 myProfile = {
 	"displayName": "",
 	"statusMessage": "",
@@ -124,17 +132,36 @@ myProfile = {
 myProfile["displayName"] = clientProfile.displayName
 myProfile["statusMessage"] = clientProfile.statusMessage
 myProfile["pictureStatus"] = clientProfile.pictureStatus
-
-herProfile = {
-	"displayName": "",
-	"statusMessage": "",
-	"pictureStatus": ""
-}
-
-myProfile["displayName"] = clientProfile.displayName
-myProfile["statusMessage"] = clientProfile.statusMessage
-myProfile["pictureStatus"] = clientProfile.pictureStatus
-
+def restart_program():
+    python = sys.executable
+    os.execl(python, python, * sys.argv)
+def sendMention(to, text="", mids=[]):
+    arrData = ""
+    arr = []
+    mention = "@"
+    if mids == []:
+        raise Exception("Invalid mids")
+    if "@!" in text:
+        if text.count("@!") != len(mids):
+            raise Exception("Invalid mids")
+        texts = text.split("@!")
+        textx = ""
+        for mid in mids:
+            textx += str(texts[mids.index(mid)])
+            slen = len(textx)
+            elen = len(textx) + 15
+            arrData = {'S':str(slen), 'E':str(elen - 4), 'M':mid}
+            arr.append(arrData)
+            textx += mention
+        textx += str(texts[len(mids)])
+    else:
+        textx = ""
+        slen = len(textx)
+        elen = len(textx) + 15
+        arrData = {'S':str(slen), 'E':str(elen - 4), 'M':mids[0]}
+        arr.append(arrData)
+        textx += mention + str(text)
+    client.sendMessage(to, textx, {'MENTION': str('{"MENTIONEES":' + json.dumps(arr) + '}')}, 0)
 
 def mention(to, nama):
     aa = ""
@@ -142,7 +169,7 @@ def mention(to, nama):
     strt = int(0)
     akh = int(0)
     nm = nama
-    myid = kc.getProfile().mid
+    myid = client.getProfile().mid
     if myid in nm:
         nm.remove(myid)
     for mm in nm:
@@ -154,279 +181,353 @@ def mention(to, nama):
         aa = (aa[:int(len(aa)-1)])
         text = bb
     try:
-        kc.sendMessage(to, text, contentMetadata={'MENTION':'{"MENTIONEES":['+aa+']}'}, contentType=0)
+        client.sendMessage(to, text, contentMetadata={'MENTION':'{"MENTIONEES":['+aa+']}'}, contentType=0)
     except Exception as error:
         print(error)
-
+def sendMention2(to, text="", mids=[]):
+    arrData = ""
+    arr = []
+    mention = "@zeroxyuuki "
+    if mids == []:
+        raise Exception("Invalid mids")
+    if "@!" in text:
+        if text.count("@!") != len(mids):
+            raise Exception("Invalid mids")
+        texts = text.split("@!")
+        textx = ""
+        for mid in mids:
+            textx += str(texts[mids.index(mid)])
+            slen = len(textx)
+            elen = len(textx) + 15
+            arrData = {'S':str(slen), 'E':str(elen - 4), 'M':mid}
+            arr.append(arrData)
+            textx += mention
+        textx += str(texts[len(mids)])
+    else:
+        textx = ""
+        slen = len(textx)
+        elen = len(textx) + 15
+        arrData = {'S':str(slen), 'E':str(elen - 4), 'M':mids[0]}
+        arr.append(arrData)
+        textx += mention + str(text)
+        client.sendMessage(to, textx, {'MENTION': str('{"MENTIONEES":' + json.dumps(arr) + '}')}, 0)
+        
 def restart_program():
     python = sys.executable
     os.execl(python, python, * sys.argv)
-
-while True:
+def clientBot(op):
     try:
-        ops=poll.singleTrace(count=50)
-        if ops != None:
-          for op in ops:
 #=========================================================================================================================================#
-            #if op.type in OpType._VALUES_TO_NAMES:
-            #    print("[ {} ] {}".format(str(op.type), str(OpType._VALUES_TO_NAMES[op.type])))
 #=========================================================================================================================================#
+            if op.type == 0:
+                return
 
+            if op.type == 5:
+                print ("[ 5 ] NOTIFIED ADD CONTACT")
+                client.sendMessage(op.param1, "Terima kasih telah menambahkan saya sebagai teman :3\nBOT hanya bisa digunakan di grup saja!")
 
-            if op.type == 11:
-                print ("[ 11 ] NOTIFIED UPDATE GROUP")
-                if op.param3 == "1":
-                    group = client.getGroup(op.param1)
-                    contact = client.getContact(op.param2)
-                    arg = "   Changed : Group Name"
-                    arg += "\n   New Group Name : {}".format(str(group.name))
-                    arg += "\n   Executor : {}".format(str(contact.displayName))
-                    print (arg)
-                elif op.param3 == "4":
-                    group = client.getGroup(op.param1)
-                    contact = client.getContact(op.param2)
-                    if group.preventedJoinByTicket == False:
-                        gQr = "Opened"
-                    else:
-                        gQr = "Closed"
-                    arg = "   Changed : Group Qr"
-                    arg += "\n   Group Name : {}".format(str(group.name))
-                    arg += "\n   New Group Qr Status : {}".format(gQr)
-                    arg += "\n   Executor : {}".format(str(contact.displayName))
-                    print (arg)
-
-
-            if op.type == 17:
-                print ("[ 17 ]  NOTIFIED ACCEPT GROUP INVITATION")
-                group = client.getGroup(op.param1)
-                contact = client.getContact(op.param2)
-                arg = "   Group Name : {}".format(str(group.name))
-                arg += "\n   User Join : {}".format(str(contact.displayName))
-                print (arg)
-
-            if op.type == 19:
-                print ("[ 19 ] NOTIFIED KICKOUT FROM GROUP")
-                group = client.getGroup(op.param1)
-                contact = client.getContact(op.param2)
-                victim = client.getContact(op.param3)
-                arg = "   Group Name : {}".format(str(group.name))
-                arg += "\n   Executor : {}".format(str(contact.displayName))
-                arg += "\n   Victim : {}".format(str(victim.displayName))
-                print (arg)
-
-            if op.type == 19:
+            if op.type == 13:
                 if Amid in op.param3:
-                    G = kc.getGroup(op.param1)
-                    G.preventedJoinByTicket = False
-                    kc.updateGroup(G)
-                    Ti = kc.reissueGroupTicket(op.param1)
-                    client.acceptGroupInvitationByTicket(op.param1,Ti)
-                    X = client.getGroup(op.param1)
-                    X.preventedJoinByTicket = True
-                    client.updateGroup(X)
-                    Ti = client.reissueGroupTicket(op.param1)
-
-                if Bmid in op.param3:
-                    G = client.getGroup(op.param1)
-                    G.preventedJoinByTicket = False
-                    client.updateGroup(G)
-                    Ti = client.reissueGroupTicket(op.param1)
-                    kc.acceptGroupInvitationByTicket(op.param1,Ti)
-                    X = kc.getGroup(op.param1)
-                    X.preventedJoinByTicket = True
-                    kc.updateGroup(X)
-                    Ti = kc.reissueGroupTicket(op.param1)
-
-            if op.type == 22:
-                print ("[ 22 ] NOTIFIED INVITE INTO ROOM")
+                  print ("[ 13 ] NOTIFIED INVITE INTO GROUP")
+                  group = client.getGroup(op.param1)
+                  if len(group.members) < 15:
+                      client.acceptGroupInvitation(op.param1)
+                      client.sendMessage(op.param1,"Member grup kurang dari 20")
+                      client.leaveGroup(op.param1)
+                      print(group.name)
+                  else:
+                    client.acceptGroupInvitation(op.param1)
+                    sendMention(op.param1, "Hai @!, Terimaka Terimasih sudah mengundang BOT ini." , [op.param2])
+                    
+            if op.type in [22, 24]:
+                print ("[ 22 And 24 ] NOTIFIED INVITE INTO ROOM & NOTIFIED LEAVE ROOM")
                 if settings["autoLeave"] == True:
-                    client.sendMessage(op.param1, "Goblok ngapain invite gw")
+                    sendMention(op.param1, "Jangan undang aku kak@!")
                     client.leaveRoom(op.param1)
-
-            if op.type == 24:
-                print ("[ 24 ] NOTIFIED LEAVE ROOM")
-                if settings["autoLeave"] == True:
-                    client.sendMessage(op.param1, "Grup apa ini?")
-                    client.leaveRoom(op.param1)
-
             if op.type == 26:
                 msg = op.message
                 text = msg.text
                 msg_id = msg.id
                 receiver = msg.to
                 sender = msg._from
-                try:
-                    if msg.text != None:
-                        if msg.toType == 2:
-                           contact = client.getContact(sender)
-                           may = client.getProfile().mid
-                           if may in str(msg.contentMetadata) and 'MENTION' in str(msg.contentMetadata):
-                              kc.sendText(msg.to, "Jangan tag Fakhri kalo gapenting " + contact.displayName)
-                              kc.tag(receiver, sender)
-                        else:
-                            pass
-                    else:
-                        pass
-                except Exception as e:
-                     client.log("[MASALAH] " + str(e))
-            if op.type == 25:
-                msg = op.message
-                text = msg.text
-                msg_id = msg.id
-                receiver = msg.to
-                sender = msg._from
+                to = receiver
+                setKey = settings["keyCommand"].title()
                 try:
                     if msg.contentType == 0:
                         if msg.toType == 2:
                             client.sendChatChecked(receiver, msg_id)
                             contact = client.getContact(sender)
-                            if text.lower() == 'restart':
-                                client.sendMessage(to, "Sudah Mi Di Restart Sundala")
-                                restartBot()
-                            if text.lower() == 'runtime':
+                            if text.lower() == '!me':
+                                client.sendMessage(receiver, None, contentMetadata={'mid': sender}, contentType=13)
+                                client.tag(receiver, sender)
+                                print (sender)
+                            elif datetime.today().strftime('%H:%M') == '03:30':
+                                grups = client.groups
+                                audio = 'http://tinyurl.com/ybaznove'
+                                for grup in grups:
+                                  client.sendMessage(grup,"[ALARM]\n\nSahur!!! Sahur!!! Sahur!!!\nMari kita sahur!!!")
+                                  client.sendAudioWithURL(grup,audio)
+                            elif text.lower() == '!sider':
+                                na = "Creator This BOT"
+                                nam = "Fakhri Adi Saputra"
+                                link = "http://line.me/ti/p/~fakhrads"
+                                iconlink ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWbDftD-kEKNnwISBfhwQyAVXXRu8WWedQdsGpPGnzUaTH9BdD"                                
+                                client.sendMessageWithContent(to,helpsider,nam,link,iconlink)
+                            elif text.lower() == '!group':
+                                na = "Creator This BOT"
+                                nam = "Fakhri Adi Saputra"
+                                link = "http://line.me/ti/p/~fakhrads"
+                                iconlink ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWbDftD-kEKNnwISBfhwQyAVXXRu8WWedQdsGpPGnzUaTH9BdD" 
+                                client.sendMessageWithContent(to,helpgroup,nam,link,iconlink)
+                            elif text.lower() == '!media':
+                                na = "Creator This BOT"
+                                nam = "Fakhri Adi Saputra"
+                                link = "http://line.me/ti/p/~fakhrads"
+                                iconlink ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWbDftD-kEKNnwISBfhwQyAVXXRu8WWedQdsGpPGnzUaTH9BdD" 
+                                client.sendMessageWithContent(to,helpmedia,nam,link,iconlink)  
+                            elif text.lower() == '!creator':
+                                na = "Creator This BOT"
+                                nam = "Fakhri Adi Saputra"
+                                link = "http://line.me/ti/p/~fakhrads"
+                                iconlink ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWbDftD-kEKNnwISBfhwQyAVXXRu8WWedQdsGpPGnzUaTH9BdD" 
+                                client.sendMessageWithContent(to,"Fakhri Adi Saputra",na,link,iconlink)
+                            elif text.lower() == '!runtime':
+                              if creator in sender:
                                 timeNow = time.time()
                                 runtime = timeNow - botStart
                                 runtime = format_timespan(runtime)
                                 client.sendMessage(msg.to, "Bot sudah berjalan selama {}".format(str(runtime)))
-                            elif ("tes" in msg.text):
-                                 kc.sendText(msg.to,"tes")
-                            elif ("gn " in msg.text):
-                                 X = client.getGroup(msg.to)
-                                 X.name = msg.text.replace("Gn ","")
-                                 client.updateGroup(X)
-                            elif text.lower() == 'cancelall':
-                                 print('Cancel Executed')
-                                 gid = kc.getGroupIdsInvited()
-                                 for i in gid:
-                                     kc.rejectGroupInvitation(i)
-                                     kc.sendText(msg.to,"All invitations have been refused")
-                            elif text.lower() == 'announce':
-                                gett = client.getChatRoomAnnouncements(receiver)
-                                for a in gett:
-                                    aa = client.getContact(a.creatorMid).displayName
-                                    bb = a.contents
-                                    cc = bb.link
-                                    textt = bb.text
-                                    client.sendText(receiver, 'Link: ' + str(cc) + '\nText: ' + str(textt) + '\nMaker: ' + str(aa))
-                            elif text.lower() == 'unsend me':
-                                client.unsendMessage(msg_id)
-                            elif text.lower() == 'add all':
-                                ap = kc.getGroups([msg.to])
-                                semua = [contact.mid for contact in ap[0].members]
-                                nya = ap[0].members
-                                for a in nya:
-                                    Mi_d = str(a.mid)
-                                    kc.findAndAddContactsByMid(Mi_d)
-                            elif text.lower() == 'gurl':
-                                if msg.toType == 2:
-                                    x = kc.getGroup(msg.to)
-                                    if x.preventedJoinByTicket == True:
-                                        x.preventedJoinByTicket = False
-                                        kc.updateGroup(x)
-                                        gurl = kc.reissueGroupTicket(msg.to)
-                                        kc.sendText(msg.to,"Link grup:\n\nline://ti/g/" + gurl)
-                                    else:
-                                        gurl = kc.reissueGroupTicket(msg.to)
-                                        kc.sendText(msg.to,"Link grup:\n\nline://ti/g/" + gurl)
-                            elif "Group bc " in msg.text:
-                                bctext = msg.text.replace("Group bc ", "")
-                                n = kc.getGroupIdsJoined()
-                                for manusia in n:
-                                    kc.sendText(manusia, (bctext))
-                            elif "clonegc " in msg.text:
-                                print ('Cloning Group')
-                                gName = msg.text.replace("clonegc ","")
-                                ap = client.getGroups([msg.to])
-                                semua = [contact.mid for contact in ap[0].members]
-                                client.createGroup(gName, semua)
-                            elif text.lower() == 'getsq':
-                                a = client.getJoinedSquares()
-                                squares = a.squares
-                                members = a.members
-                                authorities = a.authorities
-                                statuses = a.statuses
-                                noteStatuses = a.noteStatuses
-                                txt = str(squares)+'\n\n'+str(members)+'\n\n'+str(authorities)+'\n\n'+str(statuses)+'\n\n'+str(noteStatuses)+'\n\n'
-                                txt2 = ''
-                                for i in range(len(squares)):
-                                    txt2 += str(i+1)+'. '+str(squares[i].invitationURL)+'\n'
-                                client.sendText(receiver, txt2)
-                            elif text.lower() == "keluar":
-                                   kc.leaveGroup(msg.to)
-                            elif text.lower() == "masuk":
-                                    G = client.getGroup(msg.to)
-                                    ginfo = client.getGroup(msg.to)
-                                    G.preventedJoinByTicket = False
-                                    client.updateGroup(G)
-                                    invsend = 0
-                                    Ticket = client.reissueGroupTicket(msg.to)
-                                    kc.acceptGroupInvitationByTicket(msg.to,Ticket)
-                                    G = client.getGroup(msg.to)
-                                    G.preventedJoinByTicket = True
-                                    client.updateGroup(G)
-                                    G.preventedJoinByTicket(G)
-                                    client.updateGroup(G)
-                            elif text.lower() == "openurl":
-                                    X = kc.getGroup(msg.to)
-                                    X.preventedJoinByTicket = False
-                                    kc.updateGroup(X)
-                                    kc.sendText(msg.to,"Sudah terbuka masterku")
-                            elif text.lower() == "closeurl":
-                                    X = kc.getGroup(msg.to)
-                                    X.preventedJoinByTicket = True
-                                    kc.updateGroup(X)
-                                    kc.sendText(msg.to,"Sudah tertutup masterku")
-                            elif 'carilagu ' in msg.text.lower():
+                              else:
+                                client.sendMessage(receiver,"Only creator")
+                            elif text.lower() == 'tes':
+                              if sender not in creator:
+                                pass
+                              else:
+                                  if sender not in user:
+                                     user[sender] = 0
+                                  if user[sender] >= limit:
+                                     client.sendMessage(to,'Command limit!')
+                                  else:  
+                                      client.sendText(msg.to,"tes")
+                                      user[sender] += 1
+                            elif msg.text.lower().startswith == '!gn':
+                                  X = client.getGroup(msg.to)
+                                  X.name = msg.text.replace("!gn ","")
+                            elif text.lower() == "!tiket":
+                                tiket = client.getUserTicket(Amid)
+                                client.sendMessage(receiver, '「 Your Ticket 」\nhttp://line.me/ti/p/{}'.format(tiket))
+                            elif text.startswith("!quran "):
+                                query = text.replace("!al-qur'an ","")
+                                text = query.split("|")
+                                surah = int(text[0])
+                                ayat1 = int(text[1])
+                                ayat2 = int(text[2])
+                                result = requests.get("https://farzain.xyz/api/alquran.php?id={}&from={}&to={}".format(surah, ayat1, ayat2))
+                                data = result.text
+                                data = json.loads(data)
+                                if data["status"] == "success":
+                                    hasil = "「 Al-Qur'an 」\n"
+                                    hasil += "\nName : {}".format(str(data["nama_surat"]))
+                                    hasil += "\nMeaning : {}".format(str(data["arti_surat"]))
+                                    hasil += "\nAyat :"
+                                    for ayat in data["ayat"]:
+                                        hasil += "\n{}".format(str(ayat))
+                                    hasil += "\nMeaning Ayat :"
+                                    for arti in data["arti"]:
+                                        hasil += "\n{}".format(str(arti))
+                                    client.sendMessage(receiver, str(hasil))
+                            elif text.lower() == '!quotes':
+                                result = requests.get("https://farzain.xyz/api/quotes.php")
+                                data = result.text
+                                data = json.loads(data)
+                                if data["status"] == "success":
+                                    hasil = data['result']
+                                    client.sendMessage(receiver, str(hasil))
+                            elif "pap:" in text.lower():
+                              try:
+                                  ayat = text.lower().replace("Pap:","")
+                                  linux = "https://api.adorable.io/avatars/300/" + ayat
+                                  client.sendImageWithURL(receiver, linux)
+                              except Exception as error:
+                                  client.sendMessage(to, "error\n" + str(error))
+                            elif text.lower() == "!murrotal":
+                                 client.sendMessage(to,"[Command Help]\n\nMurrotal 1\n\nNote:tulisnya ayat yak, kan di alquran ada ribuan ayat tuh nah tulisnya gitu, misal ayat ke 4978")
+                            elif text.lower().startswith("!murrotal"):
+                              try:
+                                  sep = text.split(" ")
+                                  ayat = text.replace(sep[0] + " ","")
+                                  path = "http://islamcdn.com/quran/media/audio/ayah/ar.alafasy/" + ayat
+                                  client.sendAudioWithURL(to, path)
+                              except Exception as error:
+                                  client.sendMessage(to, "error\n" + str(error))
+                            elif text.lower().startswith("!sholat"):
+                                a = 'Peta Lokasi'
+                                c = 'https://png.pngtree.com/element_pic/16/12/02/51e6452ca365f618ab4b723c7aa18be9.jpg'
+                                separate = msg.text.split(" ")
+                                location = msg.text.replace(separate[0] + " ","")
+                                r = requests.get("https://farzain.xyz/api/shalat.php?id={}".format(location))
+                                data = r.text
+                                data = json.loads(data)
+                                tz = pytz.timezone("Asia/Makassar")
+                                timeNow = datetime.now(tz=tz)
+                                if data["status"] == "success":
+                                    ret_ = "[ Jadwal Sholat Sekitar " + str(location) + " ]"
+                                    ret_ += "\n~Tanggal : " + datetime.strftime(timeNow,'%Y-%m-%d')
+                                    ret_ += "\n~Jam : " + datetime.strftime(timeNow,'%H:%M:%S')
+                                    ret_ += "\n~Shubuh : " + data['respon']['shubuh']
+                                    ret_ += "\n~Dzuhur " + data['respon']['dzuhur']
+                                    ret_ += "\n~Ashar " + data['respon']['ashar']
+                                    ret_ += "\n~Maghrib " + data['respon']['maghrib']
+                                    ret_ += "\n~Isya " + data['respon']['isya']
+                                    ret_ += "\n[ Success ]"
+                                    b = data['peta_gambar']
+                                    client.sendMessageWithContent(msg.to, str(ret_),a,b,c)
+                            elif text.lower().startswith("!gambar"):
                                 try:
-                                    songname = msg.text.lower().replace('carilagu ','')
-                                    params = {'songname': songname}
-                                    r = requests.get('http://ide.fdlrcn.com/workspace/yumi-apis/joox?' + urllib.parse.urlencode(params))
+                                    separate = msg.text.split(" ")
+                                    search = msg.text.replace(separate[0] + " ","")
+                                    r = requests.get("https://farzain.xyz/api/gambarg.php?id={}".format(search))
                                     data = r.text
                                     data = json.loads(data)
-                                    for song in data:
-                                        hasil = 'Ini lagumu fakhri\n'
-                                        hasil += 'Judul : ' + song[0]
-                                        hasil += '\nDurasi : ' + song[1]
-                                        hasil += '\nLink Download : ' + song[4]
-                                        kc.sendText(msg.to, hasil)
-                                        kc.sendText(msg.to, "Tunggu audionya ya..")
-                                        kc.sendAudioWithURL(msg.to, song[4])
-                                except Exception as njer:
-                                    client.sendText(msg.to, str(njer))
-                            elif "carilirik " in msg.text.lower():
+                                    if data["status"] == "success":
+                                        client.sendImageWithURL(msg.to,data['url'])
+                                    else:
+                                        client.sendMessage(to,'Parameter Error!')
+                                except Exception as error:
+                                    client.sendMessage(msg.to, str(error))
+                            elif text.lower().startswith("!smusik "):
+                                sep = msg.text.split(" ")
+                                query = msg.text.replace(sep[0] + " ","")
+                                cond = query.split("|")
+                                search = str(cond[0])
+                                result = requests.get("http://api.ntcorp.us/joox/search?q={}".format(str(search)))
+                                data = result.text
+                                data = json.loads(data)
+                                if len(cond) == 1:
+                                    num = 0
+                                    ret_ = "╔══[ Result Music ]"
+                                    for music in data["result"]:
+                                        num += 1
+                                        ret_ += "\n╠ {}. {}".format(str(num), str(music["single"]))
+                                    ret_ += "\n╚══[ Total {} Music ]".format(str(len(data["result"])))
+                                    ret_ += "\n\nUntuk Melihat Details Music, silahkan gunakan command {}!smusik {} |「number」".format(str(setKey), str(search))
+                                    client.sendMessage(to, str(ret_))
+                                elif len(cond) == 2:
+                                    num = int(cond[1])
+                                    if num <= len(data["result"]):
+                                        music = data["result"][num - 1]
+                                        result = requests.get("http://api.ntcorp.us/joox/song_info?sid={}".format(str(music["sid"])))
+                                        data = result.text
+                                        data = json.loads(data)
+                                        if data["result"] != []:
+                                            ret_ = "╔══[ Music ]"
+                                            ret_ += "\n╠ Title : {}".format(str(data["result"]["song"]))
+                                            ret_ += "\n╠ Album : {}".format(str(data["result"]["album"]))
+                                            ret_ += "\n╠ Size : {}".format(str(data["result"]["size"]))
+                                            ret_ += "\n╠ Link : {}".format(str(data["result"]["mp3"][0]))
+                                            ret_ += "\n╚══[ Finish ]"
+                                            client.sendMessage(to, str(ret_))
+                                            client.sendAudioWithURL(to, str(data["result"]["mp3"][0]))
+                            elif text.lower().startswith("!slirik"):
+                                sep = msg.text.split(" ")
+                                query = msg.text.replace(sep[0] + " ","")
+                                cond = query.split("|")
+                                search = cond[0]
+                                api = requests.get("http://api.secold.com/joox/cari/{}".format(str(search)))
+                                data = api.text
+                                data = json.loads(data)
+                                if len(cond) == 1:
+                                    num = 0
+                                    ret_ = "╔══[ Result Lyric ]"
+                                    for lyric in data["results"]:
+                                        num += 1
+                                        ret_ += "\n╠ {}. {}".format(str(num), str(lyric["single"]))
+                                    ret_ += "\n╚══[ Total {} Music ]".format(str(len(data["results"])))
+                                    ret_ += "\n\nUntuk Melihat Details Lyric, silahkan gunakan command {}!slirik {} |「number」".format(str(setKey), str(search))
+                                    client.sendMessage(to, str(ret_))
+                                elif len(cond) == 2:
+                                    num = int(cond[1])
+                                    if num <= len(data["results"]):
+                                        lyric = data["results"][num - 1]
+                                        api = requests.get("http://api.secold.com/joox/sid/{}".format(str(lyric["songid"])))
+                                        data = api.text
+                                        data = json.loads(data)
+                                        lyrics = data["results"]["lyric"]
+                                        lyric = lyrics.replace('ti:','Title - ')
+                                        lyric = lyric.replace('ar:','Artist - ')
+                                        lyric = lyric.replace('al:','Album - ')
+                                        removeString = "[1234567890.:]"
+                                        for char in removeString:
+                                            lyric = lyric.replace(char,'')
+                                        client.sendMessage(msg.to, str(lyric))
+                            elif text.lower().startswith("!searchyoutube"):
                                 sep = text.split(" ")
                                 search = text.replace(sep[0] + " ","")
-                                params = {'songname': search}
-                                with requests.session() as web:
-                                    web.headers["User-Agent"] = random.choice(settings["userAgent"])
-                                    r = web.get("https://ide.fdlrcn.com/workspace/yumi-apis/joox?" + urllib.parse.urlencode(params))
-                                    try:
-                                        data = json.loads(r.text)
-                                        for song in data:
-                                            songs = song[5]
-                                            lyric = songs.replace('ti:','Title - ')
-                                            lyric = lyric.replace('ar:','Artist - ')
-                                            lyric = lyric.replace('al:','Album - ')
-                                            removeString = "[1234567890.:]"
-                                            for char in removeString:
-                                                lyric = lyric.replace(char,'')
-                                            ret_ = "╔══[ Lyric ]"
-                                            ret_ += "\n╠ Nama lagu : {}".format(str(song[0]))
-                                            ret_ += "\n╠ Durasi : {}".format(str(song[1]))
-                                            ret_ += "\n╠ Link : {}".format(str(song[4]))
-                                            ret_ += "\n╚══[ Finish ]\n{}".format(str(lyric))
-                                            kc.sendMessage(to, str(ret_))
-                                    except:
-                                        kc.sendMessage(to, "Lirik tidak ditemukan")
-                            elif "screenshotwebsite " in msg.text.lower():
+                                params = {"search_query": search}
+                                r = requests.get("https://www.youtube.com/results", params = params)
+                                soup = BeautifulSoup(r.content, "html5lib")
+                                ret_ = "╔══[ Youtube Result ]"
+                                datas = []
+                                for data in soup.select(".yt-lockup-title > a[title]"):
+                                    if "&lists" not in data["href"]:
+                                        datas.append(data)
+                                for data in datas:
+                                    ret_ += "\n╠══[ {} ]".format(str(data["title"]))
+                                    ret_ += "\n╠ https://www.youtube.com{}".format(str(data["href"]))
+                                ret_ += "\n╚══[ Total {} ]".format(len(datas))
+                                client.sendMessage(to, str(ret_))
+                            elif text.lower().startswith("!ytmp3"):
+                                a = 'Download Link'
+                                icon = 'http://www.bondtechnology.com/wp-content/uploads/2014/12/download-icon-round-looksoftware.png'
+                                sep = text.split(" ")
+                                search = text.replace(sep[0] + " ","")
+                                r = "http://www.convertmp3.io/widget/button/?video={}".format(str(search))
+                                client.sendMessageWithContent(to,'Buka dengan browser.\nTekan download link dibawah!',a,r,icon)
+                                
+                            elif text.lower() == 'restart':
+                              if sender in creator:
+                                client.sendMessage(receiver,"Rebooting")
+                                restart_program()
+                              else:
+                                client.sendMessage(to,'Kamu bukan creator kampang!')
+                            elif text.lower() == '!gurl':
+                                if msg.toType == 2:
+                                    x = client.getGroup(msg.to)
+                                    if x.preventedJoinByTicket == True:
+                                        x.preventedJoinByTicket = False
+                                        client.updateGroup(x)
+                                        gurl = client.reissueGroupTicket(msg.to)
+                                        client.sendText(msg.to,"Link grup:\n\nline://ti/g/" + gurl)
+                                    else:
+                                        gurl = client.reissueGroupTicket(msg.to)
+                                        client.sendText(msg.to,"Link grup:\n\nline://ti/g/" + gurl)
+                            elif msg.text.lower().startswith('!bc'):
+                              if sender in creator:
+                                bctext = msg.text.replace("!bc ", "")
+                                n = client.getGroupIdsJoined()
+                                for manusia in n:
+                                    client.sendText(manusia,"[BroadCast]\n\n"+ (bctext))
+                              else:
+                                  pass
+                            elif text.lower() == "!keluar":
+                                   client.leaveGroup(msg.to)
+                                   client.leaveGroup(msg.to)
+                            elif text.lower() == "!openurl":
+                                    X = client.getGroup(msg.to)
+                                    X.preventedJoinByTicket = False
+                                    client.updateGroup(X)
+                                    client.sendText(msg.to,"Link QR Terbuka")
+                            elif text.lower() == "!closeurl":
+                                    X = client.getGroup(msg.to)
+                                    X.preventedJoinByTicket = True
+                                    client.updateGroup(X)
+                                    client.sendText(msg.to,"Link QR Tertutup")
+                            elif msg.text.lower().startswith('!ssweb'):
                                 sep = text.split(" ")
                                 query = text.replace(sep[0] + " ","")
-                                with requests.session() as web:
-                                    r = web.get("http://rahandiapi.herokuapp.com/sswebAPI?key=betakey&link={}".format(urllib.parse.quote(query)))
-                                    data = r.text
-                                    data = json.loads(data)
-                                    kc.sendImageWithURL(to, data["result"])
-                            elif "checkdate " in msg.text.lower():
+                                r = "https://image.thum.io/get/width/1200/{}".format(query)
+                                client.sendImageWithURL(receiver, r)
+                            elif msg.text.lower().startswith == '!tanggal':
                                 sep = msg.text.split(" ")
                                 tanggal = msg.text.replace(sep[0] + " ","")
                                 r=requests.get('https://script.google.com/macros/exec?service=AKfycbw7gKzP-WYV2F5mc9RaR7yE3Ve1yN91Tjs91hp_jHSE02dSv9w&nama=ervan&tanggal='+tanggal)
@@ -438,83 +539,7 @@ while True:
                                 ret_ += "\n╠ Birthday : {}".format(str(data["data"]["ultah"]))
                                 ret_ += "\n╠ Zodiak : {}".format(str(data["data"]["zodiak"]))
                                 ret_ += "\n╚══[ Success ]"
-                                kc.sendMessage(to, str(ret_))
-                            elif text.lower() == 'groupcreator':
-                                group = kc.getGroup(to)
-                                GS = group.creator.mid
-                                kc.sendContact(to, GS)
-                            elif text.lower() == 'groupid':
-                                gid = kc.getGroup(to)
-                                kc.sendMessage(to, "[ID Group : ]\n" + gid.id)
-                            elif text.lower() == 'grouppicture':
-                                group = kc.getGroup(to)
-                                path = "http://dl.profile.line-cdn.net/" + group.pictureStatus
-                                kc.sendImageWithURL(to, path)
-                            elif text.lower() == 'groupname':
-                                gid = kc.getGroup(to)
-                                kc.sendMessage(to, "[Nama Group : ]\n" + gid.name)
-                            elif text.lower() == 'groupticket':
-                                if msg.toType == 2:
-                                    group = kc.getGroup(to)
-                                    if group.preventedJoinByTicket == False:
-                                        ticket = kc.reissueGroupTicket(to)
-                                        kc.sendMessage(to, "[ Group Ticket ]\nhttps://kc.me/R/ti/g/{}".format(str(ticket)))
-                                    else:
-                                        kc.sendMessage(to, "Grup qr tidak terbuka silahkan buka terlebih dahulu dengan perintah {}openqr".format(str(settings["keyCommand"])))
-                            elif "instagraminfo" in msg.text.lower():
-                                sep = text.split(" ")
-                                search = text.replace(sep[0] + " ","")
-                                with requests.session() as web:
-                                    web.headers["User-Agent"] = random.choice(settings["userAgent"])
-                                    r = web.get("https://www.instagram.com/{}/?__a=1".format(search))
-                                    try:
-                                        data = json.loads(r.text)
-                                        ret_ = "╔══[ Profile Instagram ]"
-                                        ret_ += "\n╠ Nama : {}".format(str(data["user"]["full_name"]))
-                                        ret_ += "\n╠ Username : {}".format(str(data["user"]["username"]))
-                                        ret_ += "\n╠ Bio : {}".format(str(data["user"]["biography"]))
-                                        ret_ += "\n╠ Pengikut : {}".format(format_number(data["user"]["followed_by"]["count"]))
-                                        ret_ += "\n╠ Diikuti : {}".format(format_number(data["user"]["follows"]["count"]))
-                                        if data["user"]["is_verified"] == True:
-                                            ret_ += "\n╠ Verifikasi : Sudah"
-                                        else:
-                                            ret_ += "\n╠ Verifikasi : Belum"
-                                        if data["user"]["is_private"] == True:
-                                            ret_ += "\n╠ Akun Pribadi : Iya"
-                                        else:
-                                            ret_ += "\n╠ Akun Pribadi : Tidak"
-                                        ret_ += "\n╠ Total Post : {}".format(format_number(data["user"]["media"]["count"]))
-                                        ret_ += "\n╚══[ https://www.instagram.com/{} ]".format(search)
-                                        path = data["user"]["profile_pic_url_hd"]
-                                        kc.sendImageWithURL(to, str(path))
-                                        kc.sendMessage(to, str(ret_))
-                                    except:
-                                        kc.sendMessage(to, "Pengguna tidak ditemukan")
-                            elif "instagrampost" in msg.text.lower():
-                                separate = msg.text.split(" ")
-                                user = msg.text.replace(separate[0] + " ","")
-                                profile = "https://www.instagram.com/" + user
-                                with requests.session() as x:
-                                    x.headers['user-agent'] = 'Mozilla/5.0'
-                                    end_cursor = ''
-                                    for count in range(1, 999):
-                                        print('PAGE: ', count)
-                                        r = x.get(profile, params={'max_id': end_cursor})
-
-                                        data = re.search(r'window._sharedData = (\{.+?});</script>', r.text).group(1)
-                                        j    = json.loads(data)
-
-                                        for node in j['entry_data']['ProfilePage'][0]['user']['media']['nodes']:
-                                            if node['is_video']:
-                                                page = 'https://www.instagram.com/p/' + node['code']
-                                                r = x.get(page)
-                                                url = re.search(r'"video_url": "([^"]+)"', r.text).group(1)
-                                                print(url)
-                                                kc.sendVideoWithURL(msg.to,url)
-                                            else:
-                                                print (node['display_src'])
-                                                kc.sendImageWithURL(msg.to,node['display_src'])
-                                        end_cursor = re.search(r'"end_cursor": "([^"]+)"', r.text).group(1)
+                                client.sendMessage(receiver, str(ret_))
                             elif text.lower() == 'anime':
                                 si = ("1","2","3","4","5","6","7","8","9","0")
                                 ie = ("1","2","3","4","5","6","7","8","9","0")
@@ -524,123 +549,166 @@ while True:
                                 ss = random.choice(si)
                                 bis = bs + io + ss
                                 oew = "gan/" + bis + ".png"
-                                client.sendImage(msg.to, oew)
-                            elif 'lc ' in text.lower():
+                                client.sendImage(msg.to, oew)                              
+                            elif text.lower().startswith("!cuaca"):
+                                try:
+                                    sep = text.split(" ")
+                                    location = text.replace(sep[0] + " ","")
+                                    r = requests.get("https://farzain.xyz/api/cuaca.php?id={}".format(location))
+                                    data = r.text
+                                    data = json.loads(data)
+                                    tz = pytz.timezone("Asia/Jakarta")
+                                    timeNow = datetime.now(tz=tz)
+                                    if data["status"] == "success":
+                                        ret_ = "╔══[ Weather Status ]"
+                                        ret_ += "\n╠ Kondisi cuaca : " + data['respon']['cuaca'].replace("Kondisi cuaca ","")
+                                        ret_ += "\n╠ Lokasi : " + data['respon']['tempat'].replace("Temperatur di kota ","")
+                                        ret_ += "\n╠ Suhu : " + data['respon']['suhu'].replace("Suhu : ","") + "°C"
+                                        ret_ += "\n╠ Kelembaban : " + data['respon']['kelembapan'].replace("Kelembaban : ","") + "%"
+                                        ret_ += "\n╠ Tekanan udara : " + data['respon']['udara'].replace("Tekanan udara : ","") + "HPa"
+                                        ret_ += "\n╠ Kecepatan angin : " + data['respon']['angin'].replace("Kecepatan angin : ","") + "m/s"
+                                        ret_ += "\n╠══[ Time Status ]"
+                                        ret_ += "\n╠ Tanggal : " + datetime.strftime(timeNow,'%Y-%m-%d')
+                                        ret_ += "\n╠ Jam : " + datetime.strftime(timeNow,'%H:%M:%S') + " WIB"
+                                        ret_ += "\n╚══[ Success ]"
+                                        client.sendMessage(to, str(ret_))
+                                except Exception as error:
+                                    client.sendMessage(msg.to, str(error))
+                            elif text.lower().startswith("!lokasi "):
+                                try:
+                                    sep = text.split(" ")
+                                    location = text.replace(sep[0] + " ","")
+                                    r = requests.get("http://api.corrykalam.net/apiloc.php?lokasi={}".format(location))
+                                    data = r.text
+                                    data = json.loads(data)
+                                    if data[0] != "" and data[1] != "" and data[2] != "":
+                                        link = "https://www.google.co.id/maps/@{},{},15z".format(str(data[1]), str(data[2]))
+                                        ret_ = "[ Location Status ]"
+                                        ret_ += "\nLocation : " + data[0]
+                                        ret_ += "\nGoogle Maps : " + link
+                                        ret_ += "\n[ Success ]"
+                                        client.sendMessage(to, str(ret_))
+                                except Exception as error:
+                                    client.sendMessage(msg.to, str(error))
+                            elif text.lower().startswith("!iginfo"):
+                                try:
+                                    sep = text.split(" ")
+                                    search = text.replace(sep[0] + " ","")
+                                    r = requests.get("https://farzain.xyz/api/ig_profile.php?id={}".format(search))
+                                    data = r.text
+                                    data = json.loads(data)
+                                    if data != []:
+                                        ret_ = "[ Profile Instagram ]"
+                                        ret_ += "\nNama : {}".format(str(data["info"]["full_name"]))
+                                        ret_ += "\nUsername : {}".format(str(data["info"]["username"]))
+                                        ret_ += "\nBio : {}".format(str(data["info"]["bio"]))
+                                        ret_ += "\nPengikut : {}".format(str(data["count"]["followers"]))
+                                        ret_ += "\nDiikuti : {}".format(str(data["count"]["following"]))
+                                        ret_ += "\n Total Post : {}".format(str(data["count"]["post"]))
+                                        ret_ += "\n[ https://www.instagram.com/{} ]".format(search)
+                                        path = data["info"]["profile_pict"]
+                                        client.sendImageWithURL(to, str(path))
+                                        client.sendMessage(to, str(ret_))
+                                except Exception as error:
+                                    client.sendMessage(msg.to, str(error))
+                            elif text.lower().startswith("!igpost"):
+                                try:
+                                    sep = text.split(" ")
+                                    text = text.replace(sep[0] + " ","")
+                                    cond = text.split("|")
+                                    username = cond[0]
+                                    no = cond[1]
+                                    r = requests.get("http://rahandiapi.herokuapp.com/instapost/{}/{}?key=betakey".format(str(username), str(no)))
+                                    data = r.text
+                                    data = json.loads(data)
+                                    if data["find"] == True:
+                                        if data["media"]["mediatype"] == 1:
+                                            client.sendImageWithURL(msg.to, str(data["media"]["url"]))
+                                        if data["media"]["mediatype"] == 2:
+                                            client.sendVideoWithURL(msg.to, str(data["media"]["url"]))
+                                        ret_ = "╔══[ Info Post ]"
+                                        ret_ += "\n╠ Jumlah Like : {}".format(str(data["media"]["like_count"]))
+                                        ret_ += "\n╠ Jumlah Comment : {}".format(str(data["media"]["comment_count"]))
+                                        ret_ += "\n╚══[ Caption ]\n{}".format(str(data["media"]["caption"]))
+                                        client.sendMessage(to, str(ret_))
+                                except Exception as error:
+                                    client.sendMessage(msg.to, str(error))
+                            elif text.lower().startswith("!igstory"):
+                                try:
+                                    sep = text.split(" ")
+                                    text = text.replace(sep[0] + " ","")
+                                    cond = text.split("|")
+                                    search = str(cond[0])
+                                    if len(cond) == 2:
+                                        r = requests.get("https://farzain.xyz/api/ig_story.php?id={}".format(search))
+                                        data = r.text
+                                        data = json.loads(data)
+                                        if data["status"] != []:
+                                            num = int(cond[1])
+                                            if num <= len(data["url"]):
+                                                search = data["url"][num - 1]
+                                                if search["tipe"] == 1:
+                                                    client.sendImageWithURL(to, str(search["link"]))
+                                                if search["tipe"] == 2:
+                                                    client.sendVideoWithURL(to, str(search["link"]))
+                                except Exception as error:
+                                    client.sendMessage(msg.to, str(error))
+                            elif text.lower() == 'likes':
+                                 s = channel.getHomeProfile(sender)
+                                 print(s)
+                            elif 'like dia ' in text.lower():
                                 try:
                                     typel = [1001,1002,1003,1004,1005,1006]
                                     key = eval(msg.contentMetadata["MENTION"])
                                     u = key["MENTIONEES"][0]["M"]
                                     a = client.getContact(u).mid
                                     s = client.getContact(u).displayName
-                                    hasil = channel.getHomeProfile(mid=a)
+                                    hasil = channel.getHomeProfile(a)
                                     st = hasil['result']['feeds']
                                     for i in range(len(st)):
                                         test = st[i]
                                         result = test['post']['postInfo']['postId']
-                                        channel.like(str(sender), str(result), likeType=random.choice(typel))
-                                        channel.comment(str(sender), str(result), 'Autolike by fakhri')
+                                        channel.likePost(str(sender), str(result), likeType=random.choice(typel))
+                                        channel.createComment(str(sender), str(result), 'Autolike by fakhri')
                                     client.sendText(receiver, 'Done Like+Comment '+str(len(st))+' Post From' + str(s))
                                 except Exception as e:
                                     client.sendText(receiver, str(e))
-                            elif 'gc ' in text.lower():
+                            elif msg.text.lower().startswith('!sticker'):
                                 try:
-                                    key = eval(msg.contentMetadata["MENTION"])
-                                    u = key["MENTIONEES"][0]["M"]
-                                    cname = client.getContact(u).displayName
-                                    cmid = client.getContact(u).mid
-                                    cstatus = client.getContact(u).statusMessage
-                                    cpic = client.getContact(u).picturePath
-                                    #print(str(a))
-                                    client.sendText(receiver, 'Nama : '+cname+'\nMID : '+cmid+'\nStatus Msg : '+cstatus+'\nPicture : http://dl.profile.kc.naver.jp'+cpic)
-                                    client.sendMessage(receiver, None, contentMetadata={'mid': cmid}, contentType=13)
-                                    if "videoProfile='{" in str(client.getContact(u)):
-                                        client.sendVideoWithURL(receiver, 'http://dl.profile.kc.naver.jp'+cpic+'/vp.small')
-                                    else:
-                                        client.sendImageWithURL(receiver, 'http://dl.profile.kc.naver.jp'+cpic)
-                                except Exception as e:
-                                    client.sendText(receiver, str(e))
-                            elif 'sticker:' in msg.text.lower():
-                                try:
-                                    query = msg.text.replace("sticker:", "")
+                                    query = msg.text.replace("!sticker:", "")
                                     query = int(query)
                                     if type(query) == int:
                                         client.sendImageWithURL(receiver, 'https://stickershop.line-scdn.net/stickershop/v1/product/'+str(query)+'/ANDROID/main.png')
-                                        client.sendText(receiver, 'https://kc.me/S/sticker/'+str(query))
+                                        #client.sendText(receiver, 'https://line.me/S/sticker/'+str(query))
                                     else:
                                         client.sendText(receiver, 'gunakan key sticker angka bukan huruf')
                                 except Exception as e:
                                     client.sendText(receiver, str(e))
-                            elif msg.text in ["Key","Help","key","help"]:
-                                kc.sendText(msg.to,helpMessage)
-                            elif "yt:" in msg.text.lower():
-                                try:
-                                    query = msg.text.replace("yt:", "")
-                                    query = query.replace(" ", "+")
-                                    x = client.youtube(query)
-                                    client.sendText(receiver, x)
-                                except Exception as e:
-                                    client.sendText(receiver, str(e))
-                            elif "image:" in msg.text.lower():
-                                try:
-                                    query = msg.text.replace("image:", "")
-                                    images = client.image_search(query)
-                                    client.sendImageWithURL(receiver, images)
-                                except Exception as e:
-                                    client.sendText(receiver, str(e))
-                            elif 'say:' in msg.text.lower():
-                                try:
-                                    isi = msg.text.lower().replace('say:','')
-                                    tts = gTTS(text=isi, lang='id', slow=False)
-                                    tts.save('temp.mp3')
-                                    client.sendAudio(receiver, 'temp.mp3')
-                                except Exception as e:
-                                    client.sendText(receiver, str(e))
-                            elif 'apakah ' in msg.text.lower():
-                                try:
-                                    txt = ['iya','tidak','bisa jadi']
-                                    isi = random.choice(txt)
-                                    tts = gTTS(text=isi, lang='id', slow=False)
-                                    tts.save('temp2.mp3')
-                                    client.sendAudio(receiver, 'temp2.mp3')
-                                except Exception as e:
-                                    client.sendText(receiver, str(e))
-                            elif "sytr:" in msg.text:
-                                try:
-                                    isi = msg.text.split(":")
-                                    translator = Translator()
-                                    hasil = translator.translate(isi[2], dest=isi[1])
-                                    A = hasil.text
-                                    tts = gTTS(text=A, lang=isi[1], slow=False)
-                                    tts.save('temp3.mp3')
-                                    client.sendAudio(receiver, 'temp3.mp3')
-                                except Exception as e:
-                                    client.sendText(receiver, str(e))
-                            elif "tr:" in msg.text:
-                                try:
-                                    isi = msg.text.split(":")
-                                    translator = Translator()
-                                    hasil = translator.translate(isi[2], dest=isi[1])
-                                    A = hasil.text
-                                    client.sendText(receiver, str(A))
-                                except Exception as e:
-                                    client.sendText(receiver, str(e))
-                            elif text.lower() == 'speed':
+                            elif msg.text in ["!Key","!Help","!key","!help","Help","help"]:
+                                na = "Creator This BOT"
+                                nam = "Fakhri Adi Saputra"
+                                link = "http://line.me/ti/p/~fakhrads"
+                                iconlink ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWbDftD-kEKNnwISBfhwQyAVXXRu8WWedQdsGpPGnzUaTH9BdD" 
+                                client.sendMessageWithContent(msg.to,helpMessage,nam,link,iconlink)
+                            elif msg.text.lower() == '!changelog':
+                                client.sendText(msg.to,changeLog)
+                            elif text.lower() == '!speed':
                                 start = time.time()
                                 client.sendText(receiver, "TestSpeed")
                                 elapsed_time = time.time() - start
                                 client.sendText(receiver, "%sdetik" % (elapsed_time))
-                            elif 'spic' in text.lower():
+                            elif msg.text.lower().startswith('!spic'):
                                 try:
                                     key = eval(msg.contentMetadata["MENTION"])
                                     u = key["MENTIONEES"][0]["M"]
                                     a = client.getContact(u).pictureStatus
                                     if "videoProfile='{" in str(client.getContact(u)):
-                                        client.sendVideoWithURL(receiver, 'http://dl.profile.kc.naver.jp/'+a+'/vp.small')
+                                        client.sendVideoWithURL(receiver, 'http://dl.profile.line.naver.jp/'+a+'/vp.small')
                                     else:
-                                        client.sendImageWithURL(receiver, 'http://dl.profile.kc.naver.jp/'+a)
+                                        client.sendImageWithURL(receiver, 'http://dl.profile.line.naver.jp/'+a)
                                 except Exception as e:
                                     client.sendText(receiver, str(e))
-                            elif 'scover' in text.lower():
+                            elif msg.text.lower().startswith('!scover'):
                                 try:
                                     key = eval(msg.contentMetadata["MENTION"])
                                     u = key["MENTIONEES"][0]["M"]
@@ -648,7 +716,7 @@ while True:
                                     client.sendImageWithURL(receiver, a)
                                 except Exception as e:
                                     client.sendText(receiver, str(e))
-                            elif "cloneprofile " in msg.text.lower():
+                            elif msg.text.lower().startswith('!botclone'):
                                 if 'MENTION' in msg.contentMetadata.keys()!= None:
                                     names = re.findall(r'@(\w+)', text)
                                     mention = ast.literal_eval(msg.contentMetadata['MENTION'])
@@ -661,20 +729,7 @@ while True:
                                         client.sendMessage(msg.to, "Sukses di clone!")
                                     except:
                                         client.sendMessage(msg.to, "Gagal clone member")
-                            elif "wifeclone " in msg.text.lower():
-                                if 'MENTION' in msg.contentMetadata.keys()!= None:
-                                    names = re.findall(r'@(\w+)', text)
-                                    mention = ast.literal_eval(msg.contentMetadata['MENTION'])
-                                    mentionees = mention['MENTIONEES']
-                                    for mention in mentionees:
-                                        contact = mention["M"]
-                                        break
-                                    try:
-                                        kc.cloneContactProfile(contact)
-                                        kc.sendMessage(msg.to, "Sukses di clone!")
-                                    except:
-                                        kc.sendMessage(msg.to, "Gagal clone member")
-                            elif text.lower() == 'restoreprofile':
+                            elif text.lower() == '!restoreprofile':
                                 try:
                                     clientProfile.displayName = str(myProfile["displayName"])
                                     clientProfile.statusMessage = str(myProfile["statusMessage"])
@@ -684,12 +739,21 @@ while True:
                                     client.sendMessage(msg.to, "Berhasil restore profile tunggu beberapa saat sampai profile berubah")
                                 except:
                                     client.sendMessage(msg.to, "Gagal restore profile")
-                            elif "checkmid" in msg.text.lower():
+                            elif msg.text.lower() == '!checkmid':
                                 separate = msg.text.split(" ")
                                 saya = msg.text.replace(separate[0] + " ","")
                                 client.sendMessage(receiver, None, contentMetadata={'mid': saya}, contentType=13)
-
-                            elif text.lower() == 'friendlist':
+                            elif text.lower() == '!grouplist':
+                                    groups = client.groups
+                                    ret_ = "╔══[ Group List ]"
+                                    no = 0 + 1
+                                    for gid in groups:
+                                        group = client.getGroup(gid)
+                                        ret_ += "\n╠ {}. {} | {}".format(str(no), str(group.name), str(len(group.members)))
+                                        no += 1
+                                    ret_ += "\n╚══[ Total {} Groups ]".format(str(len(groups)))
+                                    client.sendMessage(to, str(ret_))
+                            elif text.lower() == '!friendlist':
                                 contactlist = client.getAllContactIds()
                                 kontak = client.getContacts(contactlist)
                                 num=1
@@ -700,7 +764,7 @@ while True:
                                 msgs+="\n═════════List Friend═════════\n\nTotal Friend : %i" % len(kontak)
                                 client.sendMessage(msg.to, msgs)
 
-                            elif text.lower() == 'blocklist':
+                            elif text.lower() == '!blocklist':
                                 blockedlist = client.getBlockedContactIds()
                                 kontak = client.getContacts(blockedlist)
                                 num=1
@@ -710,7 +774,12 @@ while True:
                                     num=(num+1)
                                 msgs+="\n═════════List Blocked═════════\n\nTotal Blocked : %i" % len(kontak)
                                 client.sendMessage(msg.to, msgs)
-                            elif text.lower() == 'tagall':
+                            elif text.lower() == '!tagall':
+                              if sender not in user:
+                                 user[sender] = 0
+                              if user[sender] >= 1:
+                                 client.sendMessage(to,'Melebihi batas penggunaan')
+                              else:  
                                 group = client.getGroup(receiver)
                                 nama = [contact.mid for contact in group.members]
                                 nm1, nm2, nm3, nm4, nm5, jml = [], [], [], [], [], len(nama)
@@ -763,7 +832,8 @@ while True:
                                         nm5 += [nama[m]]
                                     client.mention(receiver, nm5)
                                 client.sendText(receiver, "Members :"+str(jml))
-                            elif text.lower() == 'lurking on':
+                                user[sender] += 1
+                            elif text.lower() == '!setpoint':
                                 tz = pytz.timezone("Asia/Jakarta")
                                 timeNow = datetime.now(tz=tz)
                                 day = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday","Friday", "Saturday"]
@@ -789,7 +859,7 @@ while True:
                                         read['ROM'][msg.to] = {}
                                         with open('sider.json', 'w') as fp:
                                             json.dump(read, fp, sort_keys=True, indent=4)
-                                            client.sendMessage(msg.to,"Lurking already on")
+                                            client.sendMessage(msg.to,"Ceksider sudah diaktifkan")
                                 else:
                                     try:
                                         del read['readPoint'][msg.to]
@@ -803,9 +873,9 @@ while True:
                                     read['ROM'][msg.to] = {}
                                     with open('sider.json', 'w') as fp:
                                         json.dump(read, fp, sort_keys=True, indent=4)
-                                        kc.sendMessage(msg.to, "Set reading point:\n" + readTime)
+                                        client.sendMessage(msg.to, "Set reading point:\n" + readTime)
 
-                            elif text.lower() == 'lurking off':
+                            elif text.lower() == '!delpoint':
                                 tz = pytz.timezone("Asia/Jakarta")
                                 timeNow = datetime.now(tz=tz)
                                 day = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday","Friday", "Saturday"]
@@ -819,7 +889,7 @@ while True:
                                     if bln == str(k): bln = bulan[k-1]
                                 readTime = hasil + ", " + timeNow.strftime('%d') + " - " + bln + " - " + timeNow.strftime('%Y') + "\nJam : [ " + timeNow.strftime('%H:%M:%S') + " ]"
                                 if msg.to not in read['readPoint']:
-                                    client.sendMessage(msg.to,"Lurking already off")
+                                    client.sendMessage(msg.to,"Ceksider sudah dimatikan")
                                 else:
                                     try:
                                             del read['readPoint'][msg.to]
@@ -827,9 +897,9 @@ while True:
                                             del read['readTime'][msg.to]
                                     except:
                                           pass
-                                    kc.sendMessage(msg.to, "Delete reading point:\n" + readTime)
+                                    client.sendMessage(msg.to, "Deleted reading point:\n" + readTime)
 
-                            elif text.lower() == 'lurking reset':
+                            elif text.lower() == '!resetpoint':
                                 tz = pytz.timezone("Asia/Jakarta")
                                 timeNow = datetime.now(tz=tz)
                                 day = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday","Friday", "Saturday"]
@@ -852,9 +922,9 @@ while True:
                                         pass
                                     client.sendMessage(msg.to, "Reset reading point:\n" + readTime)
                                 else:
-                                    client.sendMessage(msg.to, "Lurking belum diaktifkan ngapain di reset?")
+                                    client.sendMessage(msg.to, "Ceksider belum diaktifkan ngapain di reset?")
 
-                            elif text.lower() == 'lurk':
+                            elif text.lower() == '!view':
                                 tz = pytz.timezone("Asia/Jakarta")
                                 timeNow = datetime.now(tz=tz)
                                 day = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday","Friday", "Saturday"]
@@ -878,7 +948,7 @@ while True:
                                         zx = ""
                                         zxc = ""
                                         zx2 = []
-                                        xpesan = 'Lurkers:\n'
+                                        xpesan = 'Yang telah membaca:\n'
                                     for x in range(len(cmem)):
                                         xname = str(cmem[x].displayName)
                                         pesan = ''
@@ -888,15 +958,47 @@ while True:
                                         zx = {'S':xlen, 'E':xlen2, 'M':cmem[x].mid}
                                         zx2.append(zx)
                                         zxc += pesan2
-                                    text = xpesan+ zxc + "\nLurking time: \n" + readTime
+                                    text = xpesan+ zxc + "\nDi set pada: \n" + readTime
                                     try:
-                                        kc.sendMessage(receiver, text, contentMetadata={'MENTION':str('{"MENTIONEES":'+json.dumps(zx2).replace(' ','')+'}')}, contentType=0)
+                                        client.sendMessage(receiver, text, contentMetadata={'MENTION':str('{"MENTIONEES":'+json.dumps(zx2).replace(' ','')+'}')}, contentType=0)
                                     except Exception as error:
                                         print (error)
                                     pass
                                 else:
-                                    client.sendMessage(receiver,"Lurking has not been set.")
-                            elif text.lower() == 'ceksider':
+                                    client.sendMessage(receiver,"Sider point belum di set.")
+                            elif msg.text.lower().startswith("murottals"):
+                                  sep = msg.text.split(" ")
+                                  surah = int(text.replace(sep[0] + " ",""))
+                                  if 0 < surah < 115:
+                                      if surah not in []:
+                                          if len(str(surah)) == 1:
+                                              audionya = "https://audio5.qurancentral.com/mishary-rashid-alafasy/mishary-rashid-alafasy-00" + str(surah) + "-muslimcentral.com.mp3"
+                                              client.sendAudioWithURL(to, audionya)
+                                          elif len(str(surah)) == 2:
+                                              audionya = "https://audio5.qurancentral.com/mishary-rashid-alafasy/mishary-rashid-alafasy-0" + str(surah) + "-muslimcentral.com.mp3"
+                                              client.sendAudioWithURL(to, audionya)
+                                          else:
+                                              audionya = "https://audio5.qurancentral.com/mishary-rashid-alafasy/mishary-rashid-alafasy-" + str(surah) + "-muslimcentral.com.mp3"
+                                              client.sendAudioWithURL(to, audionya)
+                                      else:
+                                          client.sendMessage(to, "Surah terlalu panjang")
+                                  else:
+                                      client.sendMessage(to, "Quran hanya 114 surah")   
+                            elif msg.text.lower().startswith('!say'):
+                                r = text.lower().replace("!say","")
+                                path = requests.get("https://farzain.xyz/api/tts.php?id="+ r)
+                                data = path.text
+                                data = json.loads(data)
+                                if data["status"] == "success":
+                                   client.sendAudioWithURL(to,data['result'])
+                            elif msg.text.lower().startswith('!fs'):
+                                r = text.lower().replace("!fs","")
+                                path = requests.get("https://farzain.xyz/api/premium/fs.php?apikey=afterXyoufoundY&id="+ r)
+                                data = path.text
+                                data = json.loads(data)
+                                if data["status"] == "success":
+                                   client.sendImageWithURL(to,data['url'])        
+                            elif text.lower() == 'aggresiveceksider':
                                 try:
                                     del cctv['point'][receiver]
                                     del cctv['sidermem'][receiver]
@@ -906,30 +1008,51 @@ while True:
                                 cctv['point'][receiver] = msg.id
                                 cctv['sidermem'][receiver] = ""
                                 cctv['cyduk'][receiver]=True
-                            elif text.lower() == 'offread':
+                            elif text.lower() == 'offaggresiveceksider':
                                 if msg.to in cctv['point']:
                                     cctv['cyduk'][receiver]=False
                                     client.sendText(receiver, cctv['sidermem'][msg.to])
                                 else:
                                     client.sendText(receiver, "Heh belom di Set")
-                            elif text.lower == "papay":
-                                client.sendMessage(to, "Mencoba keluar dari group")
-                                client.leaveGroup(to)
-                                client.sendText(receiver, 'Mode Public ON')
-                            elif text.lower == "tes":
-                                pesan = "yes"
-                                client.sendMessage(msg.to,pesan)
-                            elif text.lower() == 'restart':
-                                restart_program()
-                            elif "bilang:" in text.lower():
-                                p= msg.text.replace("bilang:","")
-                                kc.sendText(msg.to, (p))
+                        #   elif "/ti/g/" in msg.text.lower():
+                        #     if settings["autoJoinTicket"] == True:
+                        #         link_re = re.compile('(?:line\:\/|line\.me\/R)\/ti\/g\/([a-zA-Z0-9_-]+)?')
+                        #         links = link_re.findall(text)
+                        #         n_links = []
+                        #         for l in links:
+                        #             if l not in n_links:
+                        #                 n_links.append(l)
+                        #         for ticket_id in n_links:
+                        #             group = client.findGroupByTicket(ticket_id)
+                        #             client.acceptGroupInvitationByTicket(group.id,ticket_id)
+                        #             client.sendMessage(to, "Berhasil masuk ke group %s" % str(group.name))
+                            elif text.lower() == '!set':
+                                try:
+                                    client.sendMessage(to,'Aktif!')
+                                    del cctv['point'][receiver]
+                                    del cctv['sidermem'][receiver]
+                                    del cctv['cyduk'][receiver]
+                                except:
+                                    pass
+                                cctv['point'][receiver] = msg.id
+                                cctv['sidermem'][receiver] = ""
+                                cctv['cyduk'][receiver]=True
+                            elif text.lower() == '!cek':
+                                if msg.to in cctv['point']:
+                                    client.sendText(receiver,'Yang membaca:' + cctv['sidermem'][msg.to])
+                                else:
+                                    client.sendText(receiver, "Heh belom di Set")          
                 except Exception as e:
-                    client.sendMessage(msg.to,"ERROR : " + str(e))
+                    client.sendMessage(to,"ERROR : " + str(e))
+                    restart_program()
 #=========================================================================================================================================#
 
 #=========================================================================================================================================#
-            elif op.type == 55:
+                        
+                                   
+            if op.type == 65:
+              print ("[ 65 ] NOTIFIED DESTROY MESSAGE")
+            if op.type == 55:
                 try:
                     if cctv['cyduk'][op.param1]==True:
                         if op.param1 in cctv['point']:
@@ -937,9 +1060,8 @@ while True:
                             if Name in cctv['sidermem'][op.param1]:
                                 pass
                             else:
-                                cctv['sidermem'][op.param1] += "\n~ " + Name
-                                pref=['eh ada','hai kak','aloo..','nah','lg ngapain','halo','sini kak']
-                                client.sendText(op.param1, str(random.choice(pref))+' '+Name)
+                                cctv['sidermem'][op.param1] += "\n☑ " + Name
+                                print('READERS : '+ Name)
                         else:
                             pass
                     else:
@@ -967,3 +1089,15 @@ while True:
 
     except Exception as e:
         client.log("[SINGLE_TRACE] ERROR : " + str(e))
+        restart_program()
+
+while True:
+    try:
+        ops = clientPoll.singleTrace(count=50)
+        if ops is not None:
+            for op in ops:
+                clientBot(op)
+                clientPoll.setRevision(op.revision)
+    except Exception as error:
+        print(error)
+        restart_program()
