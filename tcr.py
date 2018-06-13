@@ -16,55 +16,17 @@ cl.log("Auth Token : " + str(cl.authToken))
 kc = LineClient(authToken='Epj5Gcjm4PWOF3Py4go5.NI2t5tOpB6nIzFS6YnQXfq.QCCGLiICV5Fy8VqMHXVCS/Iy/3Hrqulm/PUR9kq1K30=') #login token in here
 kc.log("Auth Token : " + str(kc.authToken))
 
-kk = LineClient(authToken='EpxkLGR8fr8bfKiPKKof.zA2VxW1v3DVBeELjyalsBW.ggIRykwNUO0iQOaEVdBaLU5Y3hImDdUxqR/Zgbgc31g=') #login token in here
-kk.log("Auth Token : " + str(kk.authToken))
-
-ki = LineClient(authToken='EpYZO3EpWN1tmlbrzwD8.0kqpbddt61SnYAtdZ7bzwa.tRzREzl9lI5J88oTS4/HSW9dCTPWjuTY+zQrns3QHG8=') #login token in here
-ki.log("Auth Token : " + str(ki.authToken))
-
-#kk = ki = kc = cl
-
+kc = kk = ki
 helpMessage ="""
-─┅═✥Help Command✥═┅─
-【1】 Help
-【2】 Me
-【3】 Gc
-【4】 Yt:
-【5】 Gn
-【6】 Getsq
-【7】 Image:
-【8】 Say:
-【9】 Unsend me
-【10】 Sp
-【11】 Lc
-【12】 Sticker
-【13】 Apakah
-【14】 Sytr:
-【15】 Tr:
-【16】 Spict
-【17】 Scover
-【18】 Tagall
-【19】 Ceksider
-【20】 Offread
-【21】 Mode:self
-【22】 Mode:publik
-【23】 Restart
-【24】 Papay
-
-─┅═✥SatriaNew✥═┅─
 """
 
 poll = LinePoll(cl)
 poll2 = LinePoll(ki)
-poll3 = LinePoll(kk)
-poll4 = LinePoll(kc)
 Amid = cl.getProfile().mid
 Bmid = ki.getProfile().mid
-Cmid = kk.getProfile().mid
-Dmid = kc.getProfile().mid
 KAC = [cl,ki,kc,kk]
 admin = ['ubff53033c43cb66302de3d9d43be8200']
-bots = [Amid,Bmid,Cmid,Dmid,'ubff53033c43cb66302de3d9d43be8200']
+bots = [Amid,Bmid,'ubff53033c43cb66302de3d9d43be8200']
 
 settings = {
     "restartPoint":{},
@@ -130,12 +92,6 @@ while True:
                     if op.param3 in Bmid:
                       if op.param2 in admin:
                         ki.acceptGroupInvitation(op.param1)
-                    if op.param3 in Cmid:
-                      if op.param2 in admin:
-                        kk.acceptGroupInvitation(op.param1)
-                    if op.param3 in Dmid:
-                      if op.param2 in admin:
-                        kc.acceptGroupInvitation(op.param1)
 
                 if Amid in op.param3:
                     if op.param2 not in admin:
@@ -147,8 +103,6 @@ while True:
                         cl.updateGroup(G)
                         Ti = cl.reissueGroupTicket(op.param1)
                         ki.acceptGroupInvitationByTicket(op.param1,Ti)
-                        kk.acceptGroupInvitationByTicket(op.param1,Ti)
-                        kc.acceptGroupInvitationByTicket(op.param1,Ti)
                         G.preventedJoinByTicket = True
                         kc.updateGroup(G)
                         cl.sendText(op.param1,"Ketik 'Help' untuk bantuan\n\nHarap gunakan dengan bijak!")

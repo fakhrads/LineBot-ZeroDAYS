@@ -56,8 +56,7 @@ class LineTalk(object):
         yt_href =  x.get("href")
         yt_href = yt_href.replace("watch?v=", "")
         yt_final = "https://youtu.be" + str(yt_href)
-        return yt_final
-      
+        return yt_final 
     @loggedIn 
     def sendMessageWithContent(self, to, text, name, url, iconlink):
         contentMetadata = {
