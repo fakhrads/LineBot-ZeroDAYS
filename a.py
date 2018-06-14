@@ -66,16 +66,16 @@ helpsider="""
 │ BalasMention 「On/Off」
 │ Gurl
 │ CloseURL/OpenURL
-│ Ban 「@」
-│ Clear 「@」
+│ Ban
+│ Clear
 │ ClearBan
 │ Status
 ├──「 GROUP 」
-│ 
-│ 
-│ 
-│ 
-│ 
+│ Spict
+│ Scover
+│ Svideopict
+│ Gantippgrup
+│ Set/Cek
 ├──「 INFO 」
 │ Creator: fakhrads
 ╰──────────
@@ -89,7 +89,7 @@ def backupData():
         return True
     except Exception as error:
         logError(error)
-        return False  
+        return False
 def command(text):
     pesan = text.lower()
     if settings["setKey"] == True:
@@ -138,11 +138,11 @@ def sendMention(to, text="", mids=[]):
         arrData = {'S':str(slen), 'E':str(elen - 4), 'M':mids[0]}
         arr.append(arrData)
         textx += mention + str(text)
-    fakhri.sendMessage(to, textx, {'MENTION': str('{"MENTIONEES":' + json.dumps(arr) + '}')}, 0)          
+    fakhri.sendMessage(to, textx, {'MENTION': str('{"MENTIONEES":' + json.dumps(arr) + '}')}, 0)
 def restart_program():
     backupData()
     python = sys.executable
-    os.execl(python, python, * sys.argv)  
+    os.execl(python, python, * sys.argv)
 def fakhriBot(op):
     try:
 #=========================================================================================================================================#
@@ -243,7 +243,7 @@ def fakhriBot(op):
                         pass
                     else:
                         settings["blacklist"][op.param2] = True
-                
+
                 if Cmid in op.param3:
                     if op.param2 in bots:
                         pass
@@ -270,23 +270,26 @@ def fakhriBot(op):
                         pass
                     else:
                         settings["blacklist"][op.param2] = True
-                        
+
                 if op.param3 not in bots:
                   if settings["protect"] == True:
                     if op.param2 in bots:
                       pass
-                    if op.param2 not in bots:
-                      try:
-                          random.choice(zero).kickoutFromGroup(op.param1,[op.param2])
-                          random.choice(zero1).inviteIntoGroup(op.param1,[op.param3])
-                          if op.param2 in settings["blacklist"]:
-                              pass
-                          if op.param2 in settings["whitelist"]:
-                              pass
-                          else:
-                              settings["blacklist"][op.param2] = True
-                      except Exception as e:
-                          fakhri.log('ERROR : ' + str(e))
+                    else:
+                        if op.param2 not in bots:
+                          try:
+                              random.choice(zero).kickoutFromGroup(op.param1,[op.param2])
+                              fakhri.inviteIntoGroup(op.param1,[op.param3])
+                              if op.param2 in settings["blacklist"]:
+                                  pass
+                              if op.param2 in settings["whitelist"]:
+                                  pass
+                              else:
+                                  settings["blacklist"][op.param2] = True
+                          except Exception as e:
+                              fakhri.log('ERROR : ' + str(e))
+                        else:
+                           pass
                   else:
                      pass
             if op.type == 26:
@@ -313,7 +316,7 @@ def fakhriBot(op):
                     except Exception as e:
                          fakhri.log("[MASALAH] " + str(e))
                 except Exception as e:
-                         fakhri.log("[MASALAH] " + str(e))        
+                         fakhri.log("[MASALAH] " + str(e))
             if op.type == 25:
                 try:
                     print ("[ 25 ] SEND MESSAGE")
@@ -350,12 +353,35 @@ def fakhriBot(op):
                                   G = caca.getGroup(msg.to)
                                   G.preventedJoinByTicket = True
                                   caca.updateGroup(G)
+                                elif cmd == "speed":
+                                    start = time.time()
+                                    fakhri.sendMessage(to, "Speed calculating...")
+                                    elapsed_time = time.time() - start
+                                    fakhri.sendMessage(to, "[ Speed ]\n {} detik".format(str(elapsed_time)))
                                 elif cmd == 'bot':
                                   caca.sendMessage(to,'Caca siap! :)')
                                   rindu.sendMessage(to,'Rindu juga kok!')
                                 elif cmd == 'keluar':
                                   caca.leaveGroup(to)
                                   rindu.leaveGroup(to)
+                                elif cmd == "qwerty":
+                                    fakhri.sendContact(to, "u1f41296217e740650e0448b96851a3e2',")
+                                elif cmd.startswith("cname:"):
+                                    sep = text.split(" ")
+                                    string = text.replace(sep[0] + " ","")
+                                    if len(string) <= 20:
+                                        profile = fakhri.getProfile()
+                                        profile.displayName = string
+                                        fakhri.updateProfile(profile)
+                                        fakhri.sendMessage(to,"Berhasil mengganti display name menjadi{}".format(str(string)))
+                                elif cmd.startswith("cbio:"):
+                                    sep = text.split(" ")
+                                    string = text.replace(sep[0] + " ","")
+                                    if len(string) <= 500:
+                                        profile = fakhri.getProfile()
+                                        profile.statusMessage = string
+                                        fakhri.updateProfile(profile)
+                                        fakhri.sendMessage(to,"Berhasil mengganti status message menjadi{}".format(str(string)))
                                 elif cmd == 'closeurl':
                                   if msg.toType == 2:
                                       x = fakhri.getGroup(msg.to)
@@ -367,7 +393,7 @@ def fakhriBot(op):
                                       x = fakhri.getGroup(msg.to)
                                       if x.preventedJoinByTicket == True:
                                           x.preventedJoinByTicket = False
-                                          fakhri.updateGroup(x)          
+                                          fakhri.updateGroup(x)
                                 elif cmd == 'gurl':
                                   if msg.toType == 2:
                                       x = fakhri.getGroup(msg.to)
@@ -378,7 +404,7 @@ def fakhriBot(op):
                                           fakhri.sendText(msg.to,"Link grup:\nline://ti/g/" + gurl)
                                       else:
                                           gurl = fakhri.reissueGroupTicket(msg.to)
-                                          fakhri.sendText(msg.to,"Link grup:\nline://ti/g/" + gurl)  
+                                          fakhri.sendText(msg.to,"Link grup:\nline://ti/g/" + gurl)
                                 elif cmd == 'help':
                                     na = "SelfBot By Fakhrads"
                                     nam = "Fakhri"
@@ -386,33 +412,41 @@ def fakhriBot(op):
                                     iconlink ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWbDftD-kEKNnwISBfhwQyAVXXRu8WWedQdsGpPGnzUaTH9BdD"
                                     fakhri.sendMessageWithContent(to,helpsider,nam,link,iconlink)
                                 #------------------------[PROTECT]------------------------------
+                                elif cmd.startswith("changekey:"):
+                                    sep = text.split(" ")
+                                    key = text.replace(sep[0] + " ","")
+                                    if " " in key:
+                                        fakhri.sendMessage(to, "Key tidak bisa menggunakan spasi")
+                                    else:
+                                        settings["keyCommand"] = str(key).lower()
+                                        fakhri.sendMessage(to, "Berhasil mengubah key command menjadi [ {} ]".format(str(key).lower()))
                                 elif cmd == 'protect on':
                                     settings["protect"] = True
                                     fakhri.sendMessage(to,'Proteksi grup dinyalakan!')
                                 elif cmd == 'protect off':
                                     settings["protect"] = False
                                     fakhri.sendMessage(to,'Proteksi grup dimatikan!')
-                                #------------------------[PROTECT]------------------------------    
+                                #------------------------[PROTECT]------------------------------
                                 elif cmd == 'balasmention on':
                                     settings["tag"] = True
                                     fakhri.sendMessage(to,'Balas mention dinyalakan!')
                                 elif cmd == 'balasmention off':
                                     settings["tag"] = False
                                     fakhri.sendMessage(to,'Balas mention dimatikan!')
-                                #---------------------------------------------------------------   
+                                #---------------------------------------------------------------
                                 elif cmd == 'protectqr on':
                                     settings["qrlink"] = True
                                     fakhri.sendMessage(to,'Proteksi QR dinyalakan!')
                                 elif cmd == 'protectqr off':
                                     settings["qrlink"] = False
                                     fakhri.sendMessage(to,'Proteksi QR dimatikan')
-                                #---------------------------------------------------------------    
+                                #---------------------------------------------------------------
                                 elif cmd == 'tarikpesan on':
                                     settings["unsendMessage"] = True
                                     fakhri.sendMessage(to,'Tarik pesan dinyalakan!')
                                 elif cmd == 'tarikpesan off':
                                     settings["unsendMessage"] = False
-                                    fakhri.sendMessage(to,'Tarik pesan dimatikan!')    
+                                    fakhri.sendMessage(to,'Tarik pesan dimatikan!')
                                 #---------------------------[END]------------------------------
                                 elif cmd == "status":
                                     try:
@@ -420,16 +454,16 @@ def fakhriBot(op):
                                         if settings["protect"] == True: ret_ += "\n├[ ON ] Proteksi"
                                         else: ret_ += "\n├[ OFF ] Proteksi"
                                         if settings["qrlink"] == True: ret_ += "\n├[ ON ] Proteksi QR"
-                                        else: ret_ += "\n├[ OFF ] Proteksi QR"  
+                                        else: ret_ += "\n├[ OFF ] Proteksi QR"
                                         if settings["unsendMessage"] == True: ret_ += "\n├[ ON ] Tarik Pesan"
                                         else: ret_ += "\n├[ OFF ] Tarik Pesan"
                                         if settings["tag"] == True: ret_ += "\n├[ ON ] Balas Mention"
-                                        else: ret_ += "\n├[ OFF ] Balas Mention"  
+                                        else: ret_ += "\n├[ OFF ] Balas Mention"
                                         ret_ += "\n╰──「 SETTINGS 」"
                                         fakhri.sendMessage(to, str(ret_))
                                     except Exception as e:
                                         fakhri.sendMessage(msg.to, str(e))
-                                #---------------------------------------------------------------        
+                                #---------------------------------------------------------------
                                 elif text.lower() == 'get qr': ## HEADER CONTOH DESKTOPWIN
                                     urllib.request.urlretrieve('http://api.boteater.icu/DEKSTOPWIN', '{}.txt'.format(msg._from))
                                     with open('{}.txt'.format(msg._from), 'r') as f:
@@ -439,7 +473,7 @@ def fakhriBot(op):
                                             link = (p['linkqr'])
                                             f.close()
                                             boteater.sendMessage(msg.to, link)
-                                
+
                                 elif text.lower() == 'get token':
                                     with open('{}.txt'.format(msg._from), 'r') as f:
                                         qr = f.read()
@@ -450,7 +484,7 @@ def fakhriBot(op):
                                             r = requests.get(link)
                                             ar = r.text
                                             boteater.sendMessage(msg.to, ar)
-                                        os.system('rm {}.txt'.format(msg._from))                                         
+                                        os.system('rm {}.txt'.format(msg._from))
                                 #------------------------------------------------------
                                 elif cmd == 'restart':
                                     fakhri.sendMessage(to,'Sudah direstart!')
@@ -462,7 +496,7 @@ def fakhriBot(op):
                                     fakhri.sendMessage(to, "Berhasil mengaktifkan setkey")
                                 elif text.lower() == "setkey off":
                                     settings["setKey"] = False
-                                    fakhri.sendMessage(to, "Berhasil menonaktifkan setkey")  
+                                    fakhri.sendMessage(to, "Berhasil menonaktifkan setkey")
                                 elif cmd == 'banlist':
                                     if settings["blacklist"] == {}:
                                         fakhri.sendMessage(msg.to,"╭──「 BLACKLIST」\n├[NONE]\n╰──「 USERS」")
@@ -470,8 +504,8 @@ def fakhriBot(op):
                                         mc = ""
                                         for mi_d in settings["blacklist"]:
                                             mc += "├[" + fakhri.getContact(mi_d).displayName + "]\n"
-                                        fakhri.sendText(msg.to,"╭──「 BLACKLIST」\n"+mc+"╰──「 USERS」")   
-                                      
+                                        fakhri.sendText(msg.to,"╭──「 BLACKLIST」\n"+mc+"╰──「 USERS」")
+
                                 elif cmd.startswith("mid "):
                                     if 'MENTION' in msg.contentMetadata.keys()!= None:
                                         names = re.findall(r'@(\w+)', text)
@@ -577,9 +611,9 @@ def fakhriBot(op):
                                     if msg.toType == 2:
                                         if to not in settings["changeGroupPicture"]:
                                             settings["changeGroupPicture"].append(to)
-                                        fakhri.sendMessage(to, "Silahkan kirim gambarnya")                
+                                        fakhri.sendMessage(to, "Silahkan kirim gambarnya")
                                 elif "kick " in msg.text.lower():
-                                  if msg._from in admin:	        
+                                  if msg._from in admin:
                                       if 'MENTION' in msg.contentMetadata.keys()!= None:
                                           names = re.findall(r'@(\w+)', msg.text)
                                           mention = ast.literal_eval(msg.contentMetadata['MENTION'])
@@ -607,7 +641,7 @@ def fakhriBot(op):
                                                         fakhri.sendText(msg.to,"Sukses Ditambahkan!")
                                                  else:
                                                     fakhri.sendMessage(to,'Dia admin')
-                                      except Exception as e:                   
+                                      except Exception as e:
                                           fakhri.sendMessage(to,"ERROR : " + str(e))
                                 elif 'clear ' in text.lower():
                                       try:
@@ -626,9 +660,9 @@ def fakhriBot(op):
                                                   f=codecs.open('st2__b.json','w','utf-8')
                                                   json.dump(settings["blacklist"], f, sort_keys=True, indent=4,ensure_ascii=False)
                                                   fakhri.sendMessage(msg.to,"Sukses dihapus dari blacklist!")
-                                              except Exception as e:                   
+                                              except Exception as e:
                                                   fakhri.sendMessage(to,"ERROR : " + str(e))
-                                      except Exception as e:                   
+                                      except Exception as e:
                                           fakhri.sendMessage(to,"ERROR : " + str(e))
                                 elif cmd == 'clearban':
                                       settings["blacklist"] = {}
@@ -661,7 +695,7 @@ def fakhriBot(op):
                                   settings["changeGroupPicture"].remove(to)
                                   fakhri.updateGroupPicture(to, path)
                                   fakhri.sendMessage(to, "Berhasil mengubah foto group")
-                except Exception as e:                   
+                except Exception as e:
                     fakhri.log("ERROR : " + str(e))
                     restart_program()
             if op.type == 26:
@@ -709,7 +743,7 @@ def fakhriBot(op):
                                 contact = fakhri.getContact(msg_dict[msg_id]["from"])
                                 if contact.displayNameOverridden != None:
                                     name_ = contact.displayNameOverridden
-                                else:                              
+                                else:
                                     name_ = contact.displayName
                                     ret_ = "╭──「 Canceled Message 」"
                                     ret_ += "\n│Sender : @!"
@@ -722,7 +756,7 @@ def fakhriBot(op):
                             else:
                                 fakhri.sendMessage(at,"SentMessage cancelled,But I didn't have log data.\nSorry > <")
                     except Exception as error:
-                        traceback.print_tb(error.__traceback__)            
+                        traceback.print_tb(error.__traceback__)
             if op.type == 55:
                 try:
                     if cctv['cyduk'][op.param1]==True:
@@ -738,7 +772,7 @@ def fakhriBot(op):
                     else:
                         pass
                 except:
-                    pass        
+                    pass
 #=========================================================================================================================================#
             # Don't remove this line, if you wan't get error soon!
             poll.setRevision(op.revision)

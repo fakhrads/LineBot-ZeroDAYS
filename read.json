@@ -1,7 +1,5 @@
 {
-    "blacklist": {
-        "ueb615f8e8f50ba5d6a5d59cead402b02": true
-    },
+    "blacklist": {},
     "changeGroupPicture": [],
     "changePictureProfile": false,
     "dblacklist": false,
@@ -11,7 +9,7 @@
     "qrlink": false,
     "setKey": false,
     "tag": false,
-    "unsendMessage": false,
+    "unsendMessage": true,
     "wblacklist": false,
     "whitelist": {}
 }
