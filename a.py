@@ -55,8 +55,7 @@ try:
         msg_dict = json.loads(f.read())
 except Exception as e:
     print(str(e))
-helpsider="""
-╭──「 Menu Message 」
+helpsider="""╭──「 Menu Message 」
 │ Help
 │ Restart
 ├──「 PROTECT」
@@ -78,9 +77,7 @@ helpsider="""
 │ Set/Cek
 ├──「 INFO 」
 │ Creator: fakhrads
-╰──────────
-
-"""
+╰──────────"""
 def backupData():
     try:
         backup = settings
