@@ -133,7 +133,7 @@ def cTime_to_datetime(unixtime):
     return datetime.datetime.fromtimestamp(int(str(unixtime)[:len(str(unixtime))-3]))
 def dt_to_str(dt):
     return dt.strftime('%H:%M:%S')
-  
+
 def command(text):
     pesan = text.lower()
     if settings["setKey"] == True:
@@ -189,8 +189,8 @@ def backupData():
         return True
     except Exception as error:
         logError(error)
-        return False     
-    
+        return False
+
 def mention(to, nama):
     aa = ""
     bb = ""
@@ -271,7 +271,7 @@ def clientBot(op):
                 print ("[ 22 And 24 ] NOTIFIED INVITE INTO ROOM & NOTIFIED LEAVE ROOM")
                 if settings["autoLeave"] == True:
                     sendMention(op.param1, "Jangan undang aku kak@!")
-                    client.leaveRoom(op.param1)      
+                    client.leaveRoom(op.param1)
             if op.type == 26:
                 try:
                     print ("[ 26 ] RECIEVE MESSAGE")
@@ -295,7 +295,7 @@ def clientBot(op):
                         if msg.contentType == 0:
                             if text is None:
                                 return
-                            cmd = command(text)  
+                            cmd = command(text)
                             if cmd == '!me':
                                 client.sendMessage(receiver, None, contentMetadata={'mid': sender}, contentType=13)
                                 client.tag(receiver, sender)
@@ -1050,7 +1050,7 @@ def clientBot(op):
                                           client.sendMessage(to, "Surah terlalu panjang")
                                   else:
                                       client.sendMessage(to, "Quran hanya 114 surah")
-                                     
+
                             elif msg.text.lower().startswith('!say'):
                                 r = text.lower().replace("!say","")
                                 path = requests.get("https://farzain.com/api/tts.php?id="+ r)
@@ -1119,7 +1119,7 @@ def clientBot(op):
                                     client.sendText(receiver, "Ceksider tanpa tag belum di set!\nGunakan perintah !set")
                 except Exception as e:
                     client.sendMessage(to,"ERROR : " + str(e))
-                    restart_program()                  
+                    restart_program()
 #=========================================================================================================================================#
 
 #========== ===============================================================================================================================#

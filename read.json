@@ -1,15 +1,23 @@
 {
-    "blacklist": {},
+    "blacklist": {
+        "u16ae79a1ed43ce40f234be16efafeb6c": true,
+        "u3c20b7482d6fecc74a0acfcd00e2ada0": true,
+        "u6a3172af16c3c4589622d1f143d9a4ec": true,
+        "ua7043ad572f0b1353b47633a80b0465f": true
+    },
     "changeGroupPicture": [],
     "changePictureProfile": false,
     "dblacklist": false,
+    "group": {
+        "c9c5128f87f4fad46d58da82c2daa8835": "c9c5128f87f4fad46d58da82c2daa8835"
+    },
     "keyCommand": "",
     "msg_dict": {},
     "protect": true,
     "qrlink": false,
     "setKey": false,
     "tag": false,
-    "unsendMessage": true,
+    "unsendMessage": false,
     "wblacklist": false,
     "whitelist": {}
 }
