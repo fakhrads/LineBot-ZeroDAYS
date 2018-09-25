@@ -19,7 +19,7 @@ class Config(object):
     LINE_SQUARE_QUERY_PATH      = '/SQS1'
 
     CHANNEL_ID = {
-        'LINE_TIMELINE': '1341209950',
+        'LINE_TIMELINE': '1341209850',
         'LINE_WEBTOON': '1401600689',
         'LINE_TODAY': '1518712866',
         'LINE_STORE': '1376922440',
@@ -27,8 +27,8 @@ class Config(object):
         'LINE_BUSINESS': '1459630796'
     }
 
-    APP_TYPE    = ApplicationType._VALUES_TO_NAMES[96]
-    APP_VER     = '7.18.1'
+    APP_TYPE    = ApplicationType._VALUES_TO_NAMES[368]
+    APP_VER     = '2.1.5'
     CARRIER     = '51089, 1-0'
     SYSTEM_NAME = 'FAKHRI'
     SYSTEM_VER  = '11.2.5'

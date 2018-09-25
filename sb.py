@@ -11,7 +11,8 @@ from urllib import parse
 
 botStart = time.time()
 
-client = LineClient(authToken='Et2VTGQwrBO1NYgvgj87.4jQ8bNKn9QAFKTmHMCnyHW.BrKpVBkhMPed+MG6y9/Kpqn/G1US5XSABqUktywJ4PI=')
+#client = LineClient(authToken='Et2VTGQwrBO1NYgvgj87.4jQ8bNKn9QAFKTmHMCnyHW.BrKpVBkhMPed+MG6y9/Kpqn/G1US5XSABqUktywJ4PI=')
+client = LineClient(authToken='ExmtB5kckpYWMzSOtlze.hoSdtRJc7Bj0Crf4jYRyFG.VLfOTO1AqgTCuVzAaaoNe6XvBwYDCUF7MqynELKti5M=')
 client.log("Auth Token : " + str(client.authToken))
 channel = LineChannel(client)
 client.log("Channel Access Token : " + str(channel.channelAccessToken))
